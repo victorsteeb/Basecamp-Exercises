@@ -27,6 +27,42 @@
         </div>
       </div>
 
+      <!-- Submitted restocking orders section -->
+      <div class="card" v-if="restockingOrders.length > 0 || restockingLoaded">
+        <div class="card-header">
+          <h3 class="card-title">Submitted Orders ({{ restockingOrders.length }})</h3>
+        </div>
+        <div v-if="restockingOrders.length === 0" class="empty-state">
+          No restocking orders submitted yet. Use the Restocking tab to place orders.
+        </div>
+        <div v-else class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Submitted Date</th>
+                <th>Items</th>
+                <th>Total Cost</th>
+                <th>Lead Time</th>
+                <th>Est. Delivery</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="order in restockingOrders" :key="order.id">
+                <td><strong>#{{ order.id }}</strong></td>
+                <td>{{ formatDate(order.submitted_at) }}</td>
+                <td>{{ order.items.length }} item{{ order.items.length !== 1 ? 's' : '' }}</td>
+                <td><strong>${{ order.total_cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</strong></td>
+                <td>{{ getMaxLeadTime(order) }} days</td>
+                <td>{{ formatDate(order.estimated_delivery) }}</td>
+                <td><span class="badge info">{{ order.status }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">{{ t('orders.allOrders') }} ({{ orders.length }})</h3>
@@ -95,6 +131,8 @@ export default {
     const loading = ref(true)
     const error = ref(null)
     const orders = ref([])
+    const restockingOrders = ref([])
+    const restockingLoaded = ref(false)
 
     // Use shared filters
     const {
@@ -104,6 +142,21 @@ export default {
       selectedStatus,
       getCurrentFilters
     } = useFilters()
+
+    const loadRestockingOrders = async () => {
+      try {
+        restockingOrders.value = await api.getRestockingOrders()
+      } catch (err) {
+        console.error('Failed to load restocking orders:', err)
+      } finally {
+        restockingLoaded.value = true
+      }
+    }
+
+    const getMaxLeadTime = (order) => {
+      if (!order.items || order.items.length === 0) return 0
+      return Math.max(...order.items.map(item => item.lead_time_days))
+    }
 
     const loadOrders = async () => {
       try {
@@ -153,15 +206,21 @@ export default {
       })
     }
 
-    onMounted(loadOrders)
+    onMounted(() => {
+      loadOrders()
+      loadRestockingOrders()
+    })
 
     return {
       t,
       loading,
       error,
       orders,
+      restockingOrders,
+      restockingLoaded,
       getOrdersByStatus,
       getOrderStatusClass,
+      getMaxLeadTime,
       formatDate,
       currencySymbol,
       translateProductName,
@@ -275,5 +334,12 @@ export default {
 .item-meta {
   font-size: 0.813rem;
   color: #64748b;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: #64748b;
+  font-size: 0.938rem;
 }
 </style>
