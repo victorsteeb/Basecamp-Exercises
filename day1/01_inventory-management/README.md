@@ -2,6 +2,15 @@
 
 A full-stack demo application for a Claude Code workshop — inventory management, order tracking, demand forecasting, and analytics for factory operations.
 
+## Start here
+
+This exercise has a guided walkthrough.
+
+- **Live site (preferred):** https://claude-code-workshop.netlify.app/ — enter any name and any workshop code
+- **Can't reach the site?** Follow the offline guide: [`WORKSHOP.md`](./WORKSHOP.md) (or download the [printable PDF](./docs/workshop-guide.pdf))
+
+The exercise has 12 core steps plus an Expert Challenge. The first step (fork + clone) starts the work you do in this repo.
+
 ![Dashboard](docs/dashboard-screenshot.png)
 
 ## Tech Stack
