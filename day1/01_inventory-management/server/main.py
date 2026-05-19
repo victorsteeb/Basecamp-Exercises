@@ -120,6 +120,26 @@ class CreatePurchaseOrderRequest(BaseModel):
     expected_delivery_date: str
     notes: Optional[str] = None
 
+class Task(BaseModel):
+    id: int
+    title: str
+    priority: str
+    dueDate: str
+    status: str
+
+class CreateTaskRequest(BaseModel):
+    title: str
+    priority: str
+    dueDate: str
+
+# In-memory tasks store (seeded with a few examples)
+_tasks: List[dict] = [
+    {"id": 101, "title": "Reorder circuit boards from supplier", "priority": "high", "dueDate": "2025-10-10", "status": "pending"},
+    {"id": 102, "title": "Audit Warehouse A-17 stock levels", "priority": "medium", "dueDate": "2025-10-14", "status": "pending"},
+    {"id": 103, "title": "Resolve backlog for ORD-2025-0004", "priority": "high", "dueDate": "2025-10-07", "status": "pending"},
+]
+_next_task_id = 104
+
 # API endpoints
 @app.get("/")
 def root():
@@ -303,6 +323,34 @@ def get_monthly_trends():
     result = list(months.values())
     result.sort(key=lambda x: x['month'])
     return result
+
+@app.get("/api/tasks", response_model=List[Task])
+def get_tasks():
+    return _tasks
+
+@app.post("/api/tasks", response_model=Task, status_code=201)
+def create_task(task: CreateTaskRequest):
+    global _next_task_id
+    new_task = {"id": _next_task_id, "title": task.title, "priority": task.priority, "dueDate": task.dueDate, "status": "pending"}
+    _tasks.append(new_task)
+    _next_task_id += 1
+    return new_task
+
+@app.delete("/api/tasks/{task_id}", status_code=204)
+def delete_task(task_id: int):
+    global _tasks
+    task = next((t for t in _tasks if t["id"] == task_id), None)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    _tasks = [t for t in _tasks if t["id"] != task_id]
+
+@app.patch("/api/tasks/{task_id}", response_model=Task)
+def toggle_task(task_id: int):
+    task = next((t for t in _tasks if t["id"] == task_id), None)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    task["status"] = "completed" if task["status"] == "pending" else "pending"
+    return task
 
 if __name__ == "__main__":
     import uvicorn
