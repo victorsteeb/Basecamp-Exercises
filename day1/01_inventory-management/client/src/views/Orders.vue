@@ -8,6 +8,38 @@
     <div v-if="loading" class="loading">{{ t('common.loading') }}</div>
     <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else>
+      <!-- Submitted restocking orders pinned above regular orders -->
+      <div v-if="submittedOrders.length > 0" class="card submitted-orders-section">
+        <div class="card-header">
+          <h3 class="card-title">Submitted Orders</h3>
+          <span class="badge info">{{ submittedOrders.length }}</span>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Order #</th>
+                <th>Items</th>
+                <th>Submitted</th>
+                <th>Expected Delivery</th>
+                <th>Lead Time</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="order in submittedOrders" :key="order.id">
+                <td><span class="order-number">{{ order.order_number }}</span></td>
+                <td>{{ order.items.length }} item(s)</td>
+                <td>{{ formatDate(order.order_date) }}</td>
+                <td>{{ formatDate(order.expected_delivery) }}</td>
+                <td>14 days</td>
+                <td><span class="badge info">Submitted</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="stats-grid">
         <div class="stat-card success">
           <div class="stat-label">{{ t('status.delivered') }}</div>
@@ -96,6 +128,11 @@ export default {
     const error = ref(null)
     const orders = ref([])
 
+    // Restocking orders submitted via the Restocking page are surfaced here
+    const submittedOrders = computed(() =>
+      orders.value.filter(o => o.status === 'Submitted')
+    )
+
     // Use shared filters
     const {
       selectedPeriod,
@@ -160,6 +197,7 @@ export default {
       loading,
       error,
       orders,
+      submittedOrders,
       getOrdersByStatus,
       getOrderStatusClass,
       formatDate,
@@ -172,6 +210,11 @@ export default {
 </script>
 
 <style scoped>
+.submitted-orders-section {
+  border-left: 4px solid #2563eb;
+  margin-bottom: 1.5rem;
+}
+
 /* Fixed table layout to prevent column shifting */
 .orders-table {
   table-layout: fixed;

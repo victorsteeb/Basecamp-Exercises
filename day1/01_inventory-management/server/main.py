@@ -120,6 +120,28 @@ class CreatePurchaseOrderRequest(BaseModel):
     expected_delivery_date: str
     notes: Optional[str] = None
 
+class RestockingRecommendationItem(BaseModel):
+    item_sku: str
+    item_name: str
+    trend: str
+    current_demand: int
+    forecasted_demand: int
+    restock_quantity: int
+    unit_cost: float
+    line_total: float
+    period: str
+
+class RestockingRecommendation(BaseModel):
+    items: List[RestockingRecommendationItem]
+    total_cost: float
+    budget: float
+    remaining_budget: float
+
+class CreateRestockingOrderRequest(BaseModel):
+    items: List[dict]
+    customer: str = "Internal Restocking"
+    warehouse: Optional[str] = None
+
 # API endpoints
 @app.get("/")
 def root():
@@ -303,6 +325,126 @@ def get_monthly_trends():
     result = list(months.values())
     result.sort(key=lambda x: x['month'])
     return result
+
+@app.get("/api/restocking/recommendations", response_model=RestockingRecommendation)
+def get_restocking_recommendations(budget: float = 50000.0):
+    """Recommend items to restock within the given budget, prioritised by demand trend."""
+    sku_cost_map = {item["sku"]: item["unit_cost"] for item in inventory_items}
+
+    candidates = []
+    for forecast in demand_forecasts:
+        unit_cost = sku_cost_map.get(forecast["item_sku"])
+        if unit_cost is None:
+            continue
+        restock_qty = max(0, forecast["forecasted_demand"] - forecast["current_demand"])
+        if restock_qty <= 0:
+            continue
+        candidates.append({
+            "item_sku": forecast["item_sku"],
+            "item_name": forecast["item_name"],
+            "trend": forecast["trend"],
+            "current_demand": forecast["current_demand"],
+            "forecasted_demand": forecast["forecasted_demand"],
+            "restock_quantity": restock_qty,
+            "unit_cost": unit_cost,
+            "line_total": round(restock_qty * unit_cost, 2),
+            "period": forecast["period"],
+        })
+
+    # increasing trend first, then largest demand gap
+    trend_priority = {"increasing": 0, "stable": 1, "decreasing": 2}
+    candidates.sort(key=lambda x: (
+        trend_priority.get(x["trend"], 9),
+        -(x["forecasted_demand"] - x["current_demand"])
+    ))
+
+    selected, total = [], 0.0
+    for item in candidates:
+        if total + item["line_total"] <= budget:
+            selected.append(item)
+            total += item["line_total"]
+
+    return RestockingRecommendation(
+        items=selected,
+        total_cost=round(total, 2),
+        budget=budget,
+        remaining_budget=round(budget - total, 2),
+    )
+
+
+@app.post("/api/orders", response_model=Order)
+def create_restocking_order(request: CreateRestockingOrderRequest):
+    """Create a restocking order; appended to the in-memory orders list."""
+    from datetime import datetime, timedelta
+    now = datetime.utcnow()
+    new_order = {
+        "id": str(len(orders) + 1),
+        "order_number": f"RST-{now.year}-{str(len(orders) + 1).zfill(4)}",
+        "customer": request.customer,
+        "items": request.items,
+        "status": "Submitted",
+        "order_date": now.isoformat(),
+        "expected_delivery": (now + timedelta(days=14)).isoformat(),
+        "total_value": round(sum(i.get("quantity", 0) * i.get("unit_price", 0) for i in request.items), 2),
+        "warehouse": request.warehouse,
+        "category": None,
+        "actual_delivery": None,
+    }
+    orders.append(new_order)
+    return new_order
+
+
+# In-memory task store; starts empty (mock tasks come from the frontend's useAuth)
+tasks_store: list = []
+_task_id_counter = 1
+
+class Task(BaseModel):
+    id: int
+    title: str
+    priority: str
+    dueDate: str
+    status: str
+
+class CreateTaskRequest(BaseModel):
+    title: str
+    priority: str = "medium"
+    dueDate: str
+    status: str = "pending"
+
+@app.get("/api/tasks", response_model=List[Task])
+def get_tasks():
+    return tasks_store
+
+@app.post("/api/tasks", response_model=Task, status_code=201)
+def create_task(request: CreateTaskRequest):
+    global _task_id_counter
+    task = {
+        "id": _task_id_counter,
+        "title": request.title,
+        "priority": request.priority,
+        "dueDate": request.dueDate,
+        "status": request.status,
+    }
+    _task_id_counter += 1
+    tasks_store.append(task)
+    return task
+
+@app.delete("/api/tasks/{task_id}")
+def delete_task(task_id: int):
+    task = next((t for t in tasks_store if t["id"] == task_id), None)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    tasks_store.remove(task)
+    return {"ok": True}
+
+@app.patch("/api/tasks/{task_id}", response_model=Task)
+def toggle_task(task_id: int):
+    task = next((t for t in tasks_store if t["id"] == task_id), None)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    task["status"] = "completed" if task["status"] == "pending" else "pending"
+    return task
+
 
 if __name__ == "__main__":
     import uvicorn
