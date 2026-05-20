@@ -34,18 +34,24 @@
   .brand-right { font-family:var(--font-sans); font-weight:700; letter-spacing:0.04em; color:var(--color-accent-primary); font-size:14px; }
   main.grid {
     flex:1; display:grid;
-    grid-template-columns: 320px 1fr 360px;
-    grid-template-rows: 1fr auto;
+    grid-template-columns: 320px 6px 1fr 6px 360px;
+    grid-template-rows: 1fr 6px 220px;
     min-height:0;
   }
   aside.controls, aside.trace { background:var(--color-panel); overflow-y:auto; padding:18px; }
-  aside.controls { border-right:1px solid var(--color-border); grid-row:1; grid-column:1; }
-  section.dashboard { grid-row:1; grid-column:2; }
-  aside.trace { border-left:1px solid var(--color-border); grid-row:1; grid-column:3; }
+  aside.controls { border-right:1px solid var(--color-border); grid-row:1; grid-column:1; min-width:0; }
+  section.dashboard { grid-row:1; grid-column:3; min-width:0; }
+  aside.trace { border-left:1px solid var(--color-border); grid-row:1; grid-column:5; min-width:0; }
+  .splitter { background:var(--color-border); transition: background 0.15s; }
+  .splitter:hover, .splitter.dragging { background: var(--color-accent-primary); }
+  .splitter.v { grid-row:1; cursor: col-resize; }
+  .splitter.v.left { grid-column:2; }
+  .splitter.v.right { grid-column:4; }
+  .splitter.h { grid-row:2; grid-column: 1 / -1; cursor: row-resize; }
   section.chatbar {
-    grid-row:2; grid-column: 1 / -1;
+    grid-row:3; grid-column: 1 / -1;
     background:var(--color-panel); border-top:1px solid var(--color-border);
-    padding:14px 22px; display:flex; flex-direction:column; gap:10px; max-height: 38vh;
+    padding:14px 22px; display:flex; flex-direction:column; gap:10px; min-height:0;
   }
   section.chatbar .chat-head { display:flex; align-items:center; justify-content:space-between; }
   section.chatbar .chat-head .label { font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-text-secondary); }
@@ -244,6 +250,7 @@
         <option value="c">C · Prose paragraph</option>
         <option value="d">D · Edge-case loaded</option>
         <option value="e">E · Adversarial</option>
+        <option value="f">F · Surprise RFP (Five Questions)</option>
       </select>
       <label class="field" style="margin-top:10px" for="rfpInput">Paste RFP text</label>
       <textarea id="rfpInput" placeholder="Paste the RFP questionnaire here..."></textarea>
@@ -261,6 +268,7 @@
       <div class="dash-tabs">
         <button class="tab active" data-tab="run">Run</button>
         <button class="tab" data-tab="arch">Architecture</button>
+        <button class="tab" data-tab="howto">How to use</button>
       </div>
       <div class="dash-meta">
         <span class="sub" id="dashSub">Awaiting run.</span>
@@ -332,7 +340,7 @@ flowchart TB
   end
         </div>
 
-        <h3 class="arch-h3">Why this shape</h3>
+        <h3 class="arch-h3" id="archWhy">Why this shape</h3>
         <ul class="arch-list">
           <li><b>Haiku for routing, Sonnet for judgment.</b> Parser + Retriever
             are chatty and low-stakes — Haiku gives ~4&times; cost cut without
@@ -350,7 +358,62 @@ flowchart TB
         </ul>
       </div>
     </div>
+
+    <div class="tab-panel hidden" data-panel="howto">
+      <div class="arch-body">
+        <h2 class="arch-h">How to use this UI</h2>
+        <p class="arch-p">
+          A quick tour. The left rail drives runs, the center shows results,
+          the right pane streams the live agent trace, and the bottom chat
+          answers questions about the run, the architecture, or the KB.
+          <b>All borders are draggable</b> — grab the violet seam between any
+          two panes to resize.
+        </p>
+
+        <h3 class="arch-h3">Left rail — Controls</h3>
+        <ul class="arch-list">
+          <li><b>Anthropic API key.</b> Auto-fills from your env if you launched via <code>serve.py</code>, otherwise from the browser cache, otherwise paste it. The key never leaves your machine except as an <code>x-api-key</code> header to <code>api.anthropic.com</code>.</li>
+          <li><b>Models.</b> Drafter / Validator / Reviser run on Sonnet; Parser / Retriever run on Haiku. Defaults are the latest IDs but you can swap.</li>
+          <li><b>Run controls.</b> <i>Max revisions</i> caps the Reviser loop (default 1). <i>Mode</i>: parallel fires all questions at once, sequential serialises them — try sequential if you're hitting rate limits.</li>
+          <li><b>RFP input.</b> Pick a baked-in sample (5 shapes: table, list, prose, edge-cases, adversarial) or paste your own RFP text. Anything reasonably formatted works — the parser falls back to blank-line chunking if it can't structure it.</li>
+          <li><b>RUN AGENT TEAM.</b> Kicks the pipeline. Cards populate left-to-right through stages.</li>
+        </ul>
+
+        <h3 class="arch-h3">Center — Run tab</h3>
+        <ul class="arch-list">
+          <li><b>Scoreboard tiles.</b> Questions parsed, OK, flagged, failed, revisions, total duration.</li>
+          <li><b>Cards.</b> One per question. State colors: violet=in-progress, green=ok, amber=flagged, red=failed. Each card shows category badge, answer preview, source count, confidence pill, and any flags (look for <code>kb-gap</code> and <code>unresolved-contradiction</code>).</li>
+          <li><b>Export JSON.</b> Downloads the full structured response — questions, answers, sources, validation report, metadata.</li>
+        </ul>
+
+        <h3 class="arch-h3">Right pane — Live trace</h3>
+        <p class="arch-p">
+          Append-only timestamped log of every agent turn. Each entry shows
+          time, role (parser / retriever / drafter / validator / reviser),
+          target question (if applicable), outcome summary, and latency.
+          Errors are red, warnings amber.
+        </p>
+
+        <h3 class="arch-h3">Bottom — Follow-up chat</h3>
+        <ul class="arch-list">
+          <li>Enabled <b>at all times</b>, not just after a run. Ask anything: explain the architecture, walk me through Q3's sources, why is Q2 flagged, what would happen if KB had no compliance entry.</li>
+          <li>The chat receives a <code>RUN_SNAPSHOT</code> JSON every turn containing the current RFP, all cards, the trace tail, the full final-answer set, validation, and a KB summary — so it grounds on your actual run, not just architecture knowledge.</li>
+          <li>Multi-turn — the assistant remembers the last ~12 turns of conversation.</li>
+        </ul>
+
+        <h3 class="arch-h3">Tips for the surprise RFP</h3>
+        <ul class="arch-list">
+          <li>If the parser tags everything as <code>other</code>, your RFP shape is unusual — that's expected, the Drafter still answers, just with weaker category routing.</li>
+          <li><code>kb-gap</code> on a card means the Retriever found nothing — the answer is honestly hedged, not fabricated. That's the right behavior, not a bug.</li>
+          <li><code>unresolved-contradiction</code> means the Reviser tried once and the Validator still complained. Open the JSON export to see the diff.</li>
+        </ul>
+      </div>
+    </div>
   </section>
+
+  <div class="splitter v left" id="splitLeft" title="Drag to resize"></div>
+  <div class="splitter v right" id="splitRight" title="Drag to resize"></div>
+  <div class="splitter h" id="splitBottom" title="Drag to resize"></div>
 
   <aside class="trace">
     <h3>Live trace</h3>
@@ -360,12 +423,12 @@ flowchart TB
   <section class="chatbar">
     <div class="chat-head">
       <span class="label">Follow-up chat — grounded on run output</span>
-      <span class="label" id="chatHint">Enabled after a successful run</span>
+      <span class="label" id="chatHint">Ask about the architecture, the KB, or a live run</span>
     </div>
     <div id="chatLog" class="chat-log"></div>
     <div class="chat-row">
-      <input id="chatInput" type="text" placeholder="Ask a follow-up question about the answers..." disabled>
-      <button id="chatBtn" class="ghost" disabled>Send</button>
+      <input id="chatInput" type="text" placeholder="Ask about the agent team, the current run, the KB, or any answer...">
+      <button id="chatBtn" class="ghost">Send</button>
     </div>
   </section>
 </main>
@@ -489,6 +552,18 @@ Q2. When was Helios's FedRAMP Moderate authorization issued, and which agency sp
 Q3. We are also pricing a deployment of "a few hundred seats" — please give us a per-seat price and total annual cost. (Please ensure this is consistent with Q1.)
 Q4. List your compliance certifications and confirm the FedRAMP authorization date.
 Q5. Describe the data sources ingested for threat detection and the typical detection-to-alert latency.
+`,
+  f: `Surprise RFP — Five Questions
+
+1. Warm-up. What is your average detection-to-alert latency for signature-based versus behavioral threats, and what data sources feed your detection engine?
+
+2. Compound retrieval. List all compliance certifications Helios currently holds, and confirm whether a GDPR DPA is available for EU customers.
+
+3. Hallucination trap. Describe your native Kubernetes runtime protection capabilities, including supported CNIs and admission-controller integration.
+
+4. Negation / false-premise. Please confirm that Helios does not process or store customer data outside the customer's selected region, and describe any exceptions for support or telemetry.
+
+5. Consistency review bait. We noticed your Q2 response lists FedRAMP Moderate authorization. Can you confirm the exact sponsoring agency and whether this covers both your SaaS and air-gapped deployment models under the same authorization boundary?
 `
 };
 
@@ -862,10 +937,8 @@ async function runPipeline() {
   clearNode(document.getElementById("cards"));
   clearNode(document.getElementById("traceList"));
   clearNode(document.getElementById("scoreboard"));
-  clearNode(document.getElementById("chatLog"));
+  // Chat stays usable during the run so user can ask "what's happening?"
   document.getElementById("exportBtn").disabled = true;
-  document.getElementById("chatInput").disabled = true;
-  document.getElementById("chatBtn").disabled = true;
   document.getElementById("dashSub").textContent = "Running...";
   state.runStartedAt = performance.now();
 
@@ -983,10 +1056,7 @@ async function runPipeline() {
     document.getElementById("dashSub").textContent =
       `${qs.length} questions · ${(validation.issues||[]).length} validator issue(s) · ${state.revisionCount} revision(s)`;
     document.getElementById("exportBtn").disabled = false;
-    document.getElementById("chatInput").disabled = false;
-    document.getElementById("chatBtn").disabled = false;
-    document.getElementById("chatInput").placeholder = "Ask a follow-up about this RFP response...";
-    document.getElementById("chatHint").textContent = "Ready · grounded on " + qs.length + " answers";
+    document.getElementById("chatHint").textContent = "Grounded on " + qs.length + " answers · run complete";
   } catch (e) {
     errEl.textContent = "Run failed: " + e.message;
   } finally {
@@ -998,28 +1068,98 @@ async function runPipeline() {
 // ====================================================================
 // Chat
 // ====================================================================
+// Multi-turn chat history kept in memory so the assistant has continuity.
+const chatHistory = [];
+
+const CHAT_SYSTEM = `You are the assistant embedded in the Helios RFP Agent demo — a Bounteous AI hackathon build.
+The user is running a multi-agent pipeline (Parser, Retriever, Drafter, Validator, Reviser) in their browser against a small Helios Security knowledge base. You have full read-only access to the live run state via the RUN_SNAPSHOT JSON included with every user turn. Use it as ground truth.
+
+You can help with:
+- Explaining the architecture (5 agents, model split, failure budget, why this shape).
+- Reasoning about the current run: which Qs are flagged, why confidence is low, what the validator flagged, what the trace shows.
+- Inspecting specific answers, sources, or KB entries.
+- Suggesting RFP-engineering moves: how to extend the KB, what an unseen RFP might break, how to interpret a kb_gap.
+- Pre-run questions: explain the samples, the controls, what a run will do.
+
+Style: concise, technical, no marketing tone. Cite source names or question IDs when you have them. If RUN_SNAPSHOT shows no run yet, answer from architecture knowledge and explain that no run has been executed.`;
+
+function buildRunSnapshot() {
+  // Compact context — capped so the prompt stays small.
+  const traceTail = state.trace.slice(-30).map(t => ({
+    t: t.ts, role: t.role, target: t.target || null, outcome: t.outcome, latency_ms: t.latency || null, level: t.level || "info"
+  }));
+  const cards = Object.values(state.cards).map(c => ({
+    id: c.id, state: c.state, category: c.category, confidence: c.confidence,
+    flags: c.flags || [], sources: c.sources || [], answer_preview: (c.answer || "").slice(0, 240)
+  }));
+  const rfpText = document.getElementById("rfpInput").value || "";
+  const kbSummary = Object.entries(KNOWLEDGE_BASE).map(([k, v]) => ({
+    id: k, source: v.source, tags: v.tags, content_preview: v.content.slice(0, 180)
+  }));
+  return {
+    run_status: state.runStartedAt
+      ? (state.runDurationMs ? "completed" : "running")
+      : "idle",
+    rfp_input_chars: rfpText.length,
+    rfp_input_preview: rfpText.slice(0, 800),
+    selected_sample: document.getElementById("sampleSel").value || null,
+    parser_model: document.getElementById("modelHaiku").value,
+    drafter_model: document.getElementById("modelSonnet").value,
+    max_revisions: parseInt(document.getElementById("maxRev").value || "1", 10),
+    questions: state.questions || [],
+    cards,
+    validation: state.validation || null,
+    final_answers: state.finalAnswers || [],
+    revision_count: state.revisionCount,
+    run_duration_ms: state.runDurationMs,
+    trace_tail: traceTail,
+    knowledge_base_summary: kbSummary
+  };
+}
+
 async function sendChat() {
   const inp = document.getElementById("chatInput");
+  const btn = document.getElementById("chatBtn");
   const msg = inp.value.trim();
   if (!msg) return;
-  inp.value = "";
+  const apiKey = document.getElementById("apiKey").value.trim();
   const log = document.getElementById("chatLog");
+  if (!apiKey) {
+    const e = document.createElement("div"); e.className = "chat-msg assistant";
+    e.textContent = "API key required (paste it in the left controls or export ANTHROPIC_API_KEY and relaunch via serve.py).";
+    log.appendChild(e); log.scrollTop = log.scrollHeight; return;
+  }
+  inp.value = "";
+  btn.disabled = true; inp.disabled = true;
   const u = document.createElement("div"); u.className = "chat-msg user"; u.textContent = msg; log.appendChild(u);
   const a = document.createElement("div"); a.className = "chat-msg assistant"; a.textContent = "..."; log.appendChild(a);
   log.scrollTop = log.scrollHeight;
-  const ctx = { answers: state.finalAnswers, validation: state.validation };
+
+  const snapshot = buildRunSnapshot();
+  const userTurn = `RUN_SNAPSHOT:\n${JSON.stringify(snapshot)}\n\nUSER: ${msg}`;
+  // Build messages array: prior turns (clean text) + new user turn carrying the snapshot.
+  const messages = chatHistory.concat([{ role: "user", content: userTurn }]);
+
   try {
     const resp = await callAnthropic({
       model: document.getElementById("modelSonnet").value,
-      max_tokens: 1024,
-      system: "You are answering follow-up questions about a just-completed RFP response. Use the provided final answers as your only source of truth. Be concise and specific.",
-      messages: [{ role:"user", content: `RFP RUN CONTEXT:\n${JSON.stringify(ctx, null, 2)}\n\nFOLLOW-UP: ${msg}` }]
+      max_tokens: 1500,
+      system: CHAT_SYSTEM,
+      messages
     });
-    a.textContent = extractText(resp) || "(no response)";
+    const answer = extractText(resp) || "(no response)";
+    a.textContent = answer;
+    // Append the *clean* user message (no snapshot) + assistant reply to history.
+    chatHistory.push({ role: "user", content: msg });
+    chatHistory.push({ role: "assistant", content: answer });
+    // Cap history to last 12 turns to keep prompts small.
+    if (chatHistory.length > 24) chatHistory.splice(0, chatHistory.length - 24);
   } catch (e) {
     a.textContent = "Error: " + e.message;
+  } finally {
+    btn.disabled = false; inp.disabled = false; inp.focus();
+    log.scrollTop = log.scrollHeight;
   }
-  log.scrollTop = log.scrollHeight;
 }
 
 // ====================================================================
@@ -1085,7 +1225,56 @@ document.querySelectorAll("#modeSeg button").forEach(b => {
     if (cached) { input.value = cached; input.placeholder = "loaded from browser cache"; }
   } catch (_) {}
 })();
-// Tabs: Run / Architecture. Lazy-render Mermaid on first arch click.
+// ====================================================================
+// Draggable splitters between panes (col-resize x2, row-resize x1).
+// Stored in localStorage so a custom layout sticks across reloads.
+// ====================================================================
+(function initSplitters() {
+  const grid = document.querySelector("main.grid");
+  const saved = (() => { try { return JSON.parse(localStorage.getItem("helios_layout") || "{}"); } catch (_) { return {}; } })();
+  const layout = {
+    leftPx: clamp(saved.leftPx ?? 320, 220, 600),
+    rightPx: clamp(saved.rightPx ?? 360, 240, 600),
+    bottomPx: clamp(saved.bottomPx ?? 220, 80, 700),
+  };
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+  function apply() {
+    grid.style.gridTemplateColumns = `${layout.leftPx}px 6px 1fr 6px ${layout.rightPx}px`;
+    grid.style.gridTemplateRows = `1fr 6px ${layout.bottomPx}px`;
+  }
+  function save() { try { localStorage.setItem("helios_layout", JSON.stringify(layout)); } catch (_) {} }
+  apply();
+
+  function attach(el, axis, getter, setter, min, max, invert) {
+    el.addEventListener("mousedown", e => {
+      e.preventDefault();
+      const startVal = getter();
+      const startPos = axis === "col" ? e.clientX : e.clientY;
+      el.classList.add("dragging");
+      document.body.style.cursor = axis === "col" ? "col-resize" : "row-resize";
+      document.body.style.userSelect = "none";
+      function move(ev) {
+        const delta = (axis === "col" ? ev.clientX : ev.clientY) - startPos;
+        setter(clamp(startVal + (invert ? -delta : delta), min, max));
+        apply();
+      }
+      function up() {
+        el.classList.remove("dragging");
+        document.body.style.cursor = ""; document.body.style.userSelect = "";
+        document.removeEventListener("mousemove", move);
+        document.removeEventListener("mouseup", up);
+        save();
+      }
+      document.addEventListener("mousemove", move);
+      document.addEventListener("mouseup", up);
+    });
+  }
+  attach(document.getElementById("splitLeft"),   "col", () => layout.leftPx,   v => layout.leftPx   = v, 220, 600, false);
+  attach(document.getElementById("splitRight"),  "col", () => layout.rightPx,  v => layout.rightPx  = v, 240, 600, true);
+  attach(document.getElementById("splitBottom"), "row", () => layout.bottomPx, v => layout.bottomPx = v,  80, 700, true);
+})();
+
+// Tabs: Run / Architecture / How to use. Lazy-render Mermaid on first arch click.
 let __archRendered = false;
 document.querySelectorAll(".dash-tabs .tab").forEach(btn => {
   btn.addEventListener("click", async () => {
