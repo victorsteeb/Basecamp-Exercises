@@ -154,6 +154,15 @@
   .trace-entry.warn .role { color:var(--color-warn); }
   .trace-entry.good .role { color:var(--color-good); }
   .trace-entry .latency { color:var(--color-text-secondary); }
+  .trace-entry { cursor:pointer; transition: background 0.1s; }
+  .trace-entry:hover { background: var(--color-surface-2); }
+  .trace-entry.open { background: var(--color-surface-2); border-left:2px solid var(--color-accent-primary); padding-left:6px; }
+  .trace-detail { background:var(--color-panel-2); border:1px solid var(--color-border); border-radius:6px; padding:10px 12px; margin:4px 0 8px 8px; font-size:11.5px; line-height:1.55; color:var(--color-text-secondary); }
+  .trace-detail .td-row { display:grid; grid-template-columns: 70px 1fr; gap:8px; padding:2px 0; }
+  .trace-detail .td-k { color:var(--color-text-tertiary); text-transform:uppercase; letter-spacing:0.08em; font-size:10px; padding-top:1px; }
+  .trace-detail .td-v { color:var(--color-text-primary); word-break:break-word; }
+  .trace-detail .td-sep { margin:8px 0 4px; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--color-accent-primary); }
+  .trace-detail .td-answer { margin-top:8px; padding:8px 10px; background:var(--color-bg); border-radius:5px; color:var(--color-text-primary); font-size:11.5px; white-space:pre-wrap; max-height:200px; overflow-y:auto; border:1px solid var(--color-border); }
 
   .chat-log { margin-top:12px; display:flex; flex-direction:column; gap:8px; max-height:240px; overflow-y:auto; }
   .chat-msg { padding:10px 12px; border-radius:8px; font-size:13px; line-height:1.5; border:1px solid var(--color-border); background:var(--color-panel-2); white-space:pre-wrap; }
@@ -622,16 +631,61 @@ function ts() { return new Date().toTimeString().slice(0,8); }
 function logTrace(role, target, outcome, latency, level) {
   const entry = { ts: ts(), role, target: target||"", outcome: outcome||"", latency: latency||null, level: level||"" };
   state.trace.push(entry);
+  const idx = state.trace.length - 1;
   const list = document.getElementById("traceList");
   const div = document.createElement("div");
   div.className = "trace-entry" + (level ? " " + level : "");
+  div.dataset.idx = String(idx);
   const ts1 = document.createElement("span"); ts1.className = "ts"; ts1.textContent = entry.ts;
   const role1 = document.createElement("span"); role1.className = "role"; role1.textContent = role + (target ? " " + target : "");
-  const out1 = document.createElement("span"); out1.textContent = outcome || "";
+  const out1 = document.createElement("span"); out1.className = "out"; out1.textContent = outcome || "";
   const lat1 = document.createElement("span"); lat1.className = "latency"; lat1.textContent = latency != null ? latency + "ms" : "";
   div.appendChild(ts1); div.appendChild(role1); div.appendChild(out1); div.appendChild(lat1);
+  div.addEventListener("click", () => toggleTraceDetail(div, entry));
   list.appendChild(div);
   list.scrollTop = list.scrollHeight;
+}
+
+function toggleTraceDetail(rowEl, entry) {
+  const next = rowEl.nextElementSibling;
+  if (next && next.classList.contains("trace-detail")) {
+    next.remove();
+    rowEl.classList.remove("open");
+    return;
+  }
+  rowEl.classList.add("open");
+  const d = document.createElement("div");
+  d.className = "trace-detail";
+  function row(label, value) {
+    if (value === null || value === undefined || value === "") return;
+    const r = document.createElement("div"); r.className = "td-row";
+    const k = document.createElement("span"); k.className = "td-k"; k.textContent = label;
+    const v = document.createElement("span"); v.className = "td-v"; v.textContent = String(value);
+    r.appendChild(k); r.appendChild(v); d.appendChild(r);
+  }
+  row("time",    entry.ts);
+  row("role",    entry.role);
+  row("target",  entry.target || "—");
+  row("level",   entry.level || "info");
+  row("latency", entry.latency != null ? entry.latency + " ms" : "—");
+  row("outcome", entry.outcome);
+  // If target is a question id and we have a card for it, surface live card state.
+  const card = entry.target && state.cards[entry.target];
+  if (card) {
+    const sep = document.createElement("div"); sep.className = "td-sep"; sep.textContent = "Card · " + entry.target;
+    d.appendChild(sep);
+    row("state",      card.state);
+    row("category",   card.category);
+    row("confidence", card.confidence);
+    row("sources",    (card.sources || []).join(", "));
+    row("flags",      (card.flags || []).join(", "));
+    if (card.answer) {
+      const ar = document.createElement("div"); ar.className = "td-answer";
+      ar.textContent = card.answer.slice(0, 600) + (card.answer.length > 600 ? "…" : "");
+      d.appendChild(ar);
+    }
+  }
+  rowEl.parentNode.insertBefore(d, rowEl.nextSibling);
 }
 
 function renderCard(qid) {
