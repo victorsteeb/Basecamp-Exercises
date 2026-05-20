@@ -34,16 +34,22 @@
   .brand-right { font-family:var(--font-sans); font-weight:700; letter-spacing:0.04em; color:var(--color-accent-primary); font-size:14px; }
   main.grid {
     flex:1; display:grid;
-    grid-template-columns: 320px 6px 1fr 6px 360px;
-    grid-template-rows: 1fr 6px 220px;
+    grid-template-columns: 320px 10px 1fr 10px 360px;
+    grid-template-rows: 1fr 10px 220px;
     min-height:0;
   }
   aside.controls, aside.trace { background:var(--color-panel); overflow-y:auto; padding:18px; }
   aside.controls { border-right:1px solid var(--color-border); grid-row:1; grid-column:1; min-width:0; }
   section.dashboard { grid-row:1; grid-column:3; min-width:0; }
   aside.trace { border-left:1px solid var(--color-border); grid-row:1; grid-column:5; min-width:0; }
-  .splitter { background:var(--color-border); transition: background 0.15s; }
+  .splitter { background:var(--color-border); transition: background 0.15s; position:relative; }
+  .splitter::after {
+    content:""; position:absolute; background: var(--color-text-tertiary); border-radius:2px; opacity:0.6;
+  }
+  .splitter.v::after { left:50%; top:50%; transform:translate(-50%,-50%); width:2px; height:32px; }
+  .splitter.h::after { left:50%; top:50%; transform:translate(-50%,-50%); width:48px; height:2px; }
   .splitter:hover, .splitter.dragging { background: var(--color-accent-primary); }
+  .splitter:hover::after, .splitter.dragging::after { background: var(--color-text-primary); opacity:1; }
   .splitter.v { grid-row:1; cursor: col-resize; }
   .splitter.v.left { grid-column:2; }
   .splitter.v.right { grid-column:4; }
@@ -55,7 +61,7 @@
   }
   section.chatbar .chat-head { display:flex; align-items:center; justify-content:space-between; }
   section.chatbar .chat-head .label { font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-text-secondary); }
-  section.chatbar #chatLog { max-height:24vh; overflow-y:auto; }
+  section.chatbar #chatLog { flex:1 1 auto; min-height:0; overflow-y:auto; }
   section.chatbar .chat-row input { width:100%; }
   section.dashboard { padding:22px; overflow-y:auto; background:
     radial-gradient(ellipse at top left, rgba(167,139,250,0.04), transparent 60%),
@@ -164,7 +170,18 @@
   .trace-detail .td-sep { margin:8px 0 4px; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--color-accent-primary); }
   .trace-detail .td-answer { margin-top:8px; padding:8px 10px; background:var(--color-bg); border-radius:5px; color:var(--color-text-primary); font-size:11.5px; white-space:pre-wrap; max-height:200px; overflow-y:auto; border:1px solid var(--color-border); }
 
-  .chat-log { margin-top:12px; display:flex; flex-direction:column; gap:8px; max-height:240px; overflow-y:auto; }
+  .chat-log { margin-top:0; display:flex; flex-direction:column; gap:8px; overflow-y:auto; }
+  .chat-msg.assistant h1, .chat-msg.assistant h2, .chat-msg.assistant h3 { margin:10px 0 4px 0; color:var(--color-text-primary); font-weight:700; }
+  .chat-msg.assistant h1 { font-size:16px; }
+  .chat-msg.assistant h2 { font-size:14px; }
+  .chat-msg.assistant h3 { font-size:13px; text-transform:none; letter-spacing:0; }
+  .chat-msg.assistant p { margin:6px 0; }
+  .chat-msg.assistant ul, .chat-msg.assistant ol { margin:4px 0; padding-left:20px; }
+  .chat-msg.assistant li { margin:2px 0; }
+  .chat-msg.assistant code { background:var(--color-bg); padding:1px 5px; border-radius:3px; font-family:var(--font-mono); font-size:12px; }
+  .chat-msg.assistant strong { color:var(--color-text-primary); font-weight:700; }
+  .chat-msg.assistant em { color:var(--color-text-primary); font-style:italic; }
+  .chat-msg.assistant hr { border:none; border-top:1px solid var(--color-border); margin:8px 0; }
   .chat-msg { padding:10px 12px; border-radius:8px; font-size:13px; line-height:1.5; border:1px solid var(--color-border); background:var(--color-panel-2); white-space:pre-wrap; }
   .chat-msg.user { border-left:3px solid var(--color-accent-secondary); }
   .chat-msg.assistant { border-left:3px solid var(--color-accent-primary); }
@@ -588,6 +605,36 @@ function apiHeaders() {
     "anthropic-dangerous-direct-browser-access": "true"
   };
 }
+// USD per million tokens. Approximate public pricing as of 2026-05.
+const PRICING = {
+  "claude-sonnet-4-6":      { in: 3.00,  out: 15.00 },
+  "claude-sonnet-4-5":      { in: 3.00,  out: 15.00 },
+  "claude-sonnet-4-20250514":{ in: 3.00,  out: 15.00 },
+  "claude-haiku-4-5":       { in: 1.00,  out:  5.00 },
+  "claude-3-5-haiku-latest":{ in: 0.80,  out:  4.00 }
+};
+function priceFor(model) { return PRICING[model] || PRICING["claude-sonnet-4-6"]; }
+function recordUsage(model, usage) {
+  if (!usage) return;
+  const p = priceFor(model);
+  const inTok  = (usage.input_tokens || 0) + (usage.cache_read_input_tokens || 0) * 0.1 + (usage.cache_creation_input_tokens || 0) * 1.25;
+  const outTok = usage.output_tokens || 0;
+  const cost = (inTok / 1e6) * p.in + (outTok / 1e6) * p.out;
+  state.cost.input_tokens  += (usage.input_tokens || 0);
+  state.cost.output_tokens += outTok;
+  state.cost.usd           += cost;
+  state.cost.calls         += 1;
+  state.cost.byModel[model] = (state.cost.byModel[model] || 0) + cost;
+  updateCostTile();
+}
+function updateCostTile() {
+  const el = document.getElementById("costTile");
+  if (!el) return;
+  el.textContent = "$" + state.cost.usd.toFixed(4);
+  const sub = document.getElementById("costSub");
+  if (sub) sub.textContent = `${state.cost.input_tokens.toLocaleString()} in · ${state.cost.output_tokens.toLocaleString()} out`;
+}
+
 async function callAnthropic(body) {
   const res = await fetch(API_URL, { method:"POST", headers: apiHeaders(), body: JSON.stringify(body) });
   if (!res.ok) {
@@ -595,7 +642,55 @@ async function callAnthropic(body) {
     try { detail = JSON.stringify(await res.json()); } catch(e) { detail = await res.text(); }
     throw new Error(`HTTP ${res.status}: ${detail.slice(0,240)}`);
   }
-  return await res.json();
+  const j = await res.json();
+  recordUsage(body.model, j.usage);
+  return j;
+}
+
+// Streaming variant for the chat: SSE-parses Anthropic's event stream and
+// invokes onDelta(textChunk) for every content_block_delta. Returns the
+// full concatenated text when done.
+async function callAnthropicStream(body, onDelta) {
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: apiHeaders(),
+    body: JSON.stringify({ ...body, stream: true })
+  });
+  if (!res.ok) {
+    let detail = "";
+    try { detail = JSON.stringify(await res.json()); } catch(e) { detail = await res.text(); }
+    throw new Error(`HTTP ${res.status}: ${detail.slice(0,240)}`);
+  }
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf = "", full = "";
+  let inputTokens = 0, outputTokens = 0;
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let nl;
+    while ((nl = buf.indexOf("\n")) >= 0) {
+      const line = buf.slice(0, nl).trim();
+      buf = buf.slice(nl + 1);
+      if (!line.startsWith("data:")) continue;
+      const payload = line.slice(5).trim();
+      if (!payload || payload === "[DONE]") continue;
+      try {
+        const evt = JSON.parse(payload);
+        if (evt.type === "content_block_delta" && evt.delta && evt.delta.type === "text_delta") {
+          full += evt.delta.text;
+          onDelta(evt.delta.text, full);
+        } else if (evt.type === "message_start" && evt.message && evt.message.usage) {
+          inputTokens = evt.message.usage.input_tokens || 0;
+        } else if (evt.type === "message_delta" && evt.usage) {
+          outputTokens = evt.usage.output_tokens || outputTokens;
+        }
+      } catch(_) { /* skip malformed event */ }
+    }
+  }
+  recordUsage(body.model, { input_tokens: inputTokens, output_tokens: outputTokens });
+  return full;
 }
 
 function safeParseJSON(text) {
@@ -623,7 +718,8 @@ const state = {
   validation: null,
   runStartedAt: 0,
   runDurationMs: 0,
-  revisionCount: 0
+  revisionCount: 0,
+  cost: { input_tokens: 0, output_tokens: 0, usd: 0, calls: 0, byModel: {} }
 };
 
 function ts() { return new Date().toTimeString().slice(0,8); }
@@ -767,19 +863,33 @@ function renderScoreboard() {
   const ok = cards.filter(c => c.state==="final" && !c.failed && !(c.flags && c.flags.length)).length;
   const flagged = cards.filter(c => c.state==="final" && c.flags && c.flags.length && !c.failed).length;
   const failed = cards.filter(c => c.failed).length;
+  const tokSub = `${state.cost.input_tokens.toLocaleString()} in · ${state.cost.output_tokens.toLocaleString()} out`;
   const items = [
-    ["Questions", total],
-    ["OK", ok],
-    ["Flagged", flagged],
-    ["Failed", failed],
-    ["Revisions", state.revisionCount],
-    ["Duration", state.runDurationMs ? (state.runDurationMs/1000).toFixed(1) + "s" : "—"]
+    ["Questions", total, null],
+    ["OK", ok, null],
+    ["Flagged", flagged, null],
+    ["Failed", failed, null],
+    ["Revisions", state.revisionCount, null],
+    ["Duration", state.runDurationMs ? (state.runDurationMs/1000).toFixed(1) + "s" : "—", null],
+    ["Cost", "$" + state.cost.usd.toFixed(4), tokSub]
   ];
-  for (const [lbl,val] of items) {
+  for (const [lbl, val, sub] of items) {
     const t = document.createElement("div"); t.className = "score-tile";
     const l = document.createElement("div"); l.className = "lbl"; l.textContent = lbl;
-    const v = document.createElement("div"); v.className = "val"; v.textContent = String(val);
-    t.appendChild(l); t.appendChild(v); sb.appendChild(t);
+    const v = document.createElement("div"); v.className = "val";
+    if (lbl === "Cost") v.id = "costTile";
+    v.textContent = String(val);
+    t.appendChild(l); t.appendChild(v);
+    if (sub) {
+      const s = document.createElement("div"); s.className = "sub";
+      if (lbl === "Cost") s.id = "costSub";
+      s.textContent = sub;
+      s.style.fontSize = "10px";
+      s.style.color = "var(--color-text-tertiary)";
+      s.style.marginTop = "2px";
+      t.appendChild(s);
+    }
+    sb.appendChild(t);
   }
 }
 
@@ -987,6 +1097,8 @@ async function runPipeline() {
   if (!rfp) { errEl.textContent = "Paste an RFP or load a sample."; return; }
 
   state.questions = []; state.cards = {}; state.trace = [];
+  state.cost = { input_tokens: 0, output_tokens: 0, usd: 0, calls: 0, byModel: {} };
+  renderScoreboard();
   state.finalAnswers = []; state.validation = null; state.revisionCount = 0;
   clearNode(document.getElementById("cards"));
   clearNode(document.getElementById("traceList"));
@@ -1171,6 +1283,50 @@ function buildRunSnapshot() {
   };
 }
 
+// Tiny safe markdown renderer for chat output. Handles: # / ## / ###,
+// **bold**, *italic*, `code`, ---, bullets (- or *), numbered (1.),
+// blank-line paragraphs. Escapes HTML first so it's XSS-safe.
+function renderMarkdown(container, md) {
+  container.textContent = "";
+  function escape(s) { return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+  function inline(s) {
+    s = escape(s);
+    s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+    s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    s = s.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+    return s;
+  }
+  const lines = md.split(/\r?\n/);
+  let html = "", list = null;
+  function closeList() { if (list) { html += `</${list}>`; list = null; } }
+  for (const raw of lines) {
+    const line = raw.trimEnd();
+    if (!line.trim()) { closeList(); continue; }
+    if (/^---+$/.test(line.trim())) { closeList(); html += "<hr>"; continue; }
+    let m;
+    if ((m = line.match(/^(#{1,3})\s+(.+)$/))) {
+      closeList();
+      const lvl = m[1].length;
+      html += `<h${lvl}>${inline(m[2])}</h${lvl}>`;
+      continue;
+    }
+    if ((m = line.match(/^\s*[-*]\s+(.+)$/))) {
+      if (list !== "ul") { closeList(); html += "<ul>"; list = "ul"; }
+      html += `<li>${inline(m[1])}</li>`;
+      continue;
+    }
+    if ((m = line.match(/^\s*\d+\.\s+(.+)$/))) {
+      if (list !== "ol") { closeList(); html += "<ol>"; list = "ol"; }
+      html += `<li>${inline(m[1])}</li>`;
+      continue;
+    }
+    closeList();
+    html += `<p>${inline(line)}</p>`;
+  }
+  closeList();
+  container.innerHTML = html;
+}
+
 async function sendChat() {
   const inp = document.getElementById("chatInput");
   const btn = document.getElementById("chatBtn");
@@ -1195,14 +1351,17 @@ async function sendChat() {
   const messages = chatHistory.concat([{ role: "user", content: userTurn }]);
 
   try {
-    const resp = await callAnthropic({
+    a.textContent = "";
+    const answer = await callAnthropicStream({
       model: document.getElementById("modelSonnet").value,
       max_tokens: 1500,
       system: CHAT_SYSTEM,
       messages
+    }, (_chunk, full) => {
+      renderMarkdown(a, full);
+      log.scrollTop = log.scrollHeight;
     });
-    const answer = extractText(resp) || "(no response)";
-    a.textContent = answer;
+    if (!answer) renderMarkdown(a, "(no response)");
     // Append the *clean* user message (no snapshot) + assistant reply to history.
     chatHistory.push({ role: "user", content: msg });
     chatHistory.push({ role: "assistant", content: answer });
@@ -1293,8 +1452,8 @@ document.querySelectorAll("#modeSeg button").forEach(b => {
   };
   function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
   function apply() {
-    grid.style.gridTemplateColumns = `${layout.leftPx}px 6px 1fr 6px ${layout.rightPx}px`;
-    grid.style.gridTemplateRows = `1fr 6px ${layout.bottomPx}px`;
+    grid.style.gridTemplateColumns = `${layout.leftPx}px 10px 1fr 10px ${layout.rightPx}px`;
+    grid.style.gridTemplateRows = `1fr 10px ${layout.bottomPx}px`;
   }
   function save() { try { localStorage.setItem("helios_layout", JSON.stringify(layout)); } catch (_) {} }
   apply();
