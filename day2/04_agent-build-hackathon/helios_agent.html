@@ -1,0 +1,1108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Helios · RFP Agent Team</title>
+<style>
+  :root {
+    --color-bg: #0d1117;
+    --color-panel: #12151c;
+    --color-panel-2: #181c25;
+    --color-border: #232836;
+    --color-text-primary: #e6edf3;
+    --color-text-secondary: #b1bac4;
+    --color-accent-primary: #a78bfa;
+    --color-accent-secondary: #5E6AD2;
+    --color-good: #4ade80;
+    --color-warn: #fbbf24;
+    --color-bad: #f87171;
+    --font-mono: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, monospace;
+    --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background:var(--color-bg); color:var(--color-text-primary); font-family:var(--font-sans); height:100%; }
+  body { display:flex; flex-direction:column; min-height:100vh; }
+  header.topbar {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 22px; border-bottom:1px solid var(--color-border);
+    background:linear-gradient(180deg, rgba(167,139,250,0.06), transparent);
+  }
+  .brand-left { display:flex; align-items:baseline; gap:14px; }
+  .brand-left .product { font-weight:700; letter-spacing:0.12em; font-size:13px; color:var(--color-text-primary); text-transform:uppercase; }
+  .brand-left .product .dot { color:var(--color-accent-primary); margin:0 6px; }
+  .brand-left .tagline { font-size:12px; color:var(--color-text-secondary); }
+  .brand-right { font-family:var(--font-sans); font-weight:700; letter-spacing:0.04em; color:var(--color-accent-primary); font-size:14px; }
+  main.grid {
+    flex:1; display:grid;
+    grid-template-columns: 320px 1fr 360px;
+    grid-template-rows: 1fr auto;
+    min-height:0;
+  }
+  aside.controls, aside.trace { background:var(--color-panel); overflow-y:auto; padding:18px; }
+  aside.controls { border-right:1px solid var(--color-border); grid-row:1; grid-column:1; }
+  section.dashboard { grid-row:1; grid-column:2; }
+  aside.trace { border-left:1px solid var(--color-border); grid-row:1; grid-column:3; }
+  section.chatbar {
+    grid-row:2; grid-column: 1 / -1;
+    background:var(--color-panel); border-top:1px solid var(--color-border);
+    padding:14px 22px; display:flex; flex-direction:column; gap:10px; max-height: 38vh;
+  }
+  section.chatbar .chat-head { display:flex; align-items:center; justify-content:space-between; }
+  section.chatbar .chat-head .label { font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-text-secondary); }
+  section.chatbar #chatLog { max-height:24vh; overflow-y:auto; }
+  section.chatbar .chat-row input { width:100%; }
+  section.dashboard { padding:22px; overflow-y:auto; background:
+    radial-gradient(ellipse at top left, rgba(167,139,250,0.04), transparent 60%),
+    radial-gradient(ellipse at bottom right, rgba(94,106,210,0.04), transparent 60%),
+    var(--color-bg); }
+
+  .group { border-top:1px solid var(--color-border); padding:14px 0; }
+  .group:first-of-type { border-top:none; padding-top:4px; }
+  .group-label { font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-text-secondary); margin-bottom:8px; }
+  label.field { display:block; font-size:12px; color:var(--color-text-secondary); margin-bottom:6px; }
+  input[type=text], input[type=password], input[type=number], select, textarea {
+    width:100%; background:var(--color-panel-2); border:1px solid var(--color-border);
+    color:var(--color-text-primary); padding:8px 10px; border-radius:6px; font-family:var(--font-sans); font-size:13px;
+    outline:none; transition: border-color .15s, box-shadow .15s;
+  }
+  input:focus, select:focus, textarea:focus { border-color:var(--color-accent-primary); box-shadow:0 0 0 2px rgba(167,139,250,0.18); }
+  textarea { min-height:140px; resize:vertical; font-family:var(--font-mono); font-size:12px; line-height:1.5; }
+  .seg { display:flex; gap:4px; background:var(--color-panel-2); padding:3px; border-radius:8px; border:1px solid var(--color-border); }
+  .seg button { flex:1; background:transparent; color:var(--color-text-secondary); border:none; padding:7px 8px; font-family:var(--font-sans); font-size:12px; border-radius:5px; cursor:pointer; }
+  .seg button.active { background:var(--color-accent-primary); color:#0d1117; font-weight:600; }
+  button.primary {
+    width:100%; background:var(--color-accent-primary); color:#0d1117; border:none;
+    padding:12px 16px; border-radius:8px; font-weight:700; font-size:13px;
+    letter-spacing:0.04em; cursor:pointer; font-family:var(--font-sans);
+    transition: filter .15s;
+  }
+  button.primary:hover { filter:brightness(1.08); }
+  button.primary:disabled { opacity:0.55; cursor:not-allowed; }
+  button.ghost {
+    background:var(--color-panel-2); border:1px solid var(--color-border); color:var(--color-text-primary);
+    padding:8px 12px; border-radius:6px; font-size:12px; cursor:pointer; font-family:var(--font-sans);
+  }
+  button.ghost:hover { border-color:var(--color-accent-primary); color:var(--color-accent-primary); }
+  .inline-error { color:var(--color-bad); font-size:12px; margin-top:8px; min-height:1em; }
+
+  .dash-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:16px; }
+  .dash-head h2 { margin:0; font-size:18px; font-weight:700; letter-spacing:-0.01em; }
+  .dash-head .sub { font-size:12px; color:var(--color-text-secondary); }
+  .dash-meta { display:flex; align-items:center; gap:14px; }
+  .dash-tabs { display:flex; gap:2px; background:var(--color-surface-2); padding:3px; border:1px solid var(--color-border); border-radius:8px; }
+  .dash-tabs .tab { background:transparent; color:var(--color-text-secondary); border:none; padding:6px 14px; border-radius:5px; cursor:pointer; font:600 12px var(--font-sans); letter-spacing:0.04em; }
+  .dash-tabs .tab.active { background:var(--color-accent-primary); color:var(--color-text-inverse); }
+  .tab-panel.hidden { display:none; }
+  .arch-body { max-width:880px; font-size:13.5px; line-height:1.6; color:var(--color-text-primary); }
+  .arch-h { margin:0 0 8px 0; font-size:20px; font-weight:700; letter-spacing:-0.01em; }
+  .arch-h3 { margin:22px 0 8px 0; font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-text-secondary); font-weight:600; }
+  .arch-p { margin:0; color:var(--color-text-secondary); }
+  .arch-list { margin:0; padding-left:18px; color:var(--color-text-secondary); }
+  .arch-list li { margin:6px 0; }
+  .arch-list b { color:var(--color-text-primary); }
+  .mermaid { background:var(--color-panel-2); border:1px solid var(--color-border); border-radius:10px; padding:16px; overflow-x:auto; }
+  .mermaid svg { max-width:100%; height:auto; }
+  .scoreboard { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+  .score-tile { background:var(--color-panel-2); border:1px solid var(--color-border); border-radius:8px; padding:10px 14px; min-width:110px; }
+  .score-tile .lbl { font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-text-secondary); }
+  .score-tile .val { font-family:var(--font-mono); font-size:18px; font-weight:600; margin-top:4px; }
+  .cards { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:12px; }
+  .card {
+    background:var(--color-panel-2); border:1px solid var(--color-border); border-radius:10px;
+    padding:14px; display:flex; flex-direction:column; gap:8px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .card.state-pending     { border-color:var(--color-border); }
+  .card.state-retrieving,
+  .card.state-drafting,
+  .card.state-validating,
+  .card.state-revising    { border-color:var(--color-accent-primary); box-shadow:0 0 0 1px rgba(167,139,250,0.18); }
+  .card.state-final.ok    { border-color:var(--color-good); }
+  .card.state-final.flagged { border-color:var(--color-warn); }
+  .card.state-final.failed  { border-color:var(--color-bad); }
+  .card-head { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .card-id { font-family:var(--font-mono); font-size:12px; color:var(--color-text-secondary); }
+  .badge { font-family:var(--font-mono); font-size:10px; padding:2px 6px; border-radius:4px; border:1px solid var(--color-border); color:var(--color-text-secondary); }
+  .badge.cat { color:var(--color-accent-primary); border-color:rgba(167,139,250,0.35); }
+  .card .qtext { font-size:12px; color:var(--color-text-secondary); line-height:1.45; }
+  .card .answer { font-size:13px; line-height:1.5; color:var(--color-text-primary); display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  .card .meta { display:flex; gap:10px; flex-wrap:wrap; font-family:var(--font-mono); font-size:10px; color:var(--color-text-secondary); }
+  .card .meta .pill { padding:2px 6px; border-radius:4px; border:1px solid var(--color-border); }
+  .card .meta .pill.conf-high { color:var(--color-good); border-color:rgba(74,222,128,0.35); }
+  .card .meta .pill.conf-medium { color:var(--color-warn); border-color:rgba(251,191,36,0.35); }
+  .card .meta .pill.conf-low { color:var(--color-bad); border-color:rgba(248,113,113,0.35); }
+  .card .flags { font-size:11px; color:var(--color-warn); font-family:var(--font-mono); }
+  .card .err { font-size:11px; color:var(--color-bad); font-family:var(--font-mono); }
+
+  aside.trace h3 { margin:0 0 12px 0; font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-text-secondary); }
+  .trace-list { display:flex; flex-direction:column; gap:6px; }
+  .trace-entry {
+    display:grid; grid-template-columns: auto auto 1fr auto; gap:8px;
+    font-family:var(--font-mono); font-size:11px; line-height:1.4;
+    padding:6px 8px; border:1px solid var(--color-border); border-radius:6px;
+    background:var(--color-panel-2); color:var(--color-text-primary);
+  }
+  .trace-entry .ts { color:var(--color-text-secondary); }
+  .trace-entry .role { color:var(--color-accent-primary); }
+  .trace-entry.bad .role { color:var(--color-bad); }
+  .trace-entry.warn .role { color:var(--color-warn); }
+  .trace-entry.good .role { color:var(--color-good); }
+  .trace-entry .latency { color:var(--color-text-secondary); }
+
+  .chat-log { margin-top:12px; display:flex; flex-direction:column; gap:8px; max-height:240px; overflow-y:auto; }
+  .chat-msg { padding:10px 12px; border-radius:8px; font-size:13px; line-height:1.5; border:1px solid var(--color-border); background:var(--color-panel-2); white-space:pre-wrap; }
+  .chat-msg.user { border-left:3px solid var(--color-accent-secondary); }
+  .chat-msg.assistant { border-left:3px solid var(--color-accent-primary); }
+  .chat-row { display:flex; gap:8px; }
+  .chat-row input { flex:1; }
+  .row-2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  ::-webkit-scrollbar { width:10px; height:10px; }
+  ::-webkit-scrollbar-thumb { background:#2a3140; border-radius:6px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+</style>
+<script type="module">
+  // Mermaid renders the architecture diagrams on the Architecture tab.
+  // External dep (one CDN script); the page already needs net for the
+  // Anthropic API so this is a consistent assumption.
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#a78bfa',
+      primaryTextColor: '#0d1117',
+      primaryBorderColor: '#8b5cf6',
+      lineColor: '#7d8590',
+      secondaryColor: '#21262d',
+      tertiaryColor: '#161b22',
+      background: '#0d1117',
+      mainBkg: '#21262d',
+      nodeBorder: '#30363d',
+      edgeLabelBackground: '#161b22',
+      fontFamily: 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Inter, sans-serif'
+    }
+  });
+  window.__renderMermaid = async () => { await mermaid.run({ querySelector: '.mermaid' }); };
+</script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand-left">
+    <div class="product">HELIOS<span class="dot">·</span>RFP AGENT</div>
+    <div class="tagline">Multi-agent RFP response team</div>
+  </div>
+  <div class="brand-right">Bounteous AI</div>
+</header>
+
+<main class="grid">
+  <aside class="controls">
+    <div class="group">
+      <div class="group-label">API</div>
+      <label class="field" for="apiKey">Anthropic API key</label>
+      <input id="apiKey" type="password" placeholder="sk-ant-..." autocomplete="off">
+    </div>
+
+    <div class="group">
+      <div class="group-label">Models</div>
+      <label class="field" for="modelSonnet">Drafter / Validator / Reviser</label>
+      <select id="modelSonnet">
+        <option value="claude-sonnet-4-6">claude-sonnet-4-6</option>
+        <option value="claude-sonnet-4-5">claude-sonnet-4-5</option>
+      </select>
+      <label class="field" for="modelHaiku" style="margin-top:8px">Parser / Retriever</label>
+      <select id="modelHaiku">
+        <option value="claude-haiku-4-5">claude-haiku-4-5</option>
+        <option value="claude-3-5-haiku-latest">claude-3-5-haiku-latest</option>
+      </select>
+    </div>
+
+    <div class="group">
+      <div class="group-label">Run</div>
+      <div class="row-2">
+        <div>
+          <label class="field" for="maxRev">Max revisions</label>
+          <input id="maxRev" type="number" min="0" max="3" value="1">
+        </div>
+        <div>
+          <label class="field">Mode</label>
+          <div class="seg" id="modeSeg">
+            <button data-mode="parallel" class="active">Parallel</button>
+            <button data-mode="sequential">Sequential</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="group-label">RFP</div>
+      <label class="field" for="sampleSel">Load sample</label>
+      <select id="sampleSel">
+        <option value="">— choose —</option>
+        <option value="a">A · Markdown table (baseline 5 Qs)</option>
+        <option value="b">B · Numbered list</option>
+        <option value="c">C · Prose paragraph</option>
+        <option value="d">D · Edge-case loaded</option>
+        <option value="e">E · Adversarial</option>
+      </select>
+      <label class="field" style="margin-top:10px" for="rfpInput">Paste RFP text</label>
+      <textarea id="rfpInput" placeholder="Paste the RFP questionnaire here..."></textarea>
+    </div>
+
+    <div class="group">
+      <button id="runBtn" class="primary">RUN AGENT TEAM</button>
+      <div id="runErr" class="inline-error"></div>
+    </div>
+
+  </aside>
+
+  <section class="dashboard">
+    <div class="dash-head">
+      <div class="dash-tabs">
+        <button class="tab active" data-tab="run">Run</button>
+        <button class="tab" data-tab="arch">Architecture</button>
+      </div>
+      <div class="dash-meta">
+        <span class="sub" id="dashSub">Awaiting run.</span>
+        <button id="exportBtn" class="ghost" disabled>Export JSON</button>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="run">
+      <div class="scoreboard" id="scoreboard"></div>
+      <div class="cards" id="cards"></div>
+    </div>
+
+    <div class="tab-panel hidden" data-panel="arch">
+      <div class="arch-body">
+        <h2 class="arch-h">The demo in 60 seconds</h2>
+        <p class="arch-p">
+          Helios Security needs to answer RFPs in minutes, not hours, without
+          contradictory answers across questions. We built a 5-agent team that
+          parses an unseen RFP, retrieves from a small knowledge base, drafts
+          cited answers, validates them as a set, and revises any flagged by the
+          validator. The whole pipeline runs in the browser against the
+          Anthropic API. Open the <b>Run</b> tab, paste an RFP (or load a
+          sample), and watch the cards and live-trace fill in.
+        </p>
+
+        <h3 class="arch-h3">Pipeline</h3>
+        <div class="mermaid">
+flowchart LR
+  RFP([RFP text]) --> P[Parser<br/>haiku-4-5]
+  P --> R[Retriever<br/>haiku-4-5<br/><i>search_kb tool</i>]
+  R --> D[Drafter<br/>sonnet-4-6]
+  D --> V{Validator<br/>sonnet-4-6}
+  V -- clean --> OUT([Final JSON])
+  V -- issues --> X[Reviser<br/>sonnet-4-6]
+  X --> V2{Re-validate}
+  V2 -- clean --> OUT
+  V2 -- unresolved --> FLAG[/Ship with<br/>unresolved-contradiction/]
+  FLAG --> OUT
+        </div>
+
+        <h3 class="arch-h3">Per-question lifecycle</h3>
+        <div class="mermaid">
+stateDiagram-v2
+  [*] --> pending
+  pending --> retrieving : runRetriever
+  retrieving --> drafting : hits returned
+  retrieving --> drafting : kb_gap=true
+  drafting --> validating : draft ready
+  validating --> final : no issues
+  validating --> revising : validator flagged
+  revising --> final : revision passed recheck
+  revising --> final : ship w/ unresolved-contradiction
+  retrieving --> failed : API error
+  drafting --> failed : API error
+  failed --> [*]
+  final --> [*]
+        </div>
+
+        <h3 class="arch-h3">Failure-mode budget</h3>
+        <div class="mermaid">
+flowchart TB
+  subgraph FB[Six failure modes — each fails properly, never blows up]
+    F1[Malformed RFP] --> H1[Blank-line chunk fallback<br/>parse_quality=low]
+    F2[KB miss] --> H2[kb_gap=true<br/>confidence=low<br/>no fabrication]
+    F3[API 4xx/5xx] --> H3[That card flips red<br/>other Qs continue]
+    F4[Bad JSON from agent] --> H4[3-tier extract:<br/>JSON.parse → regex → raw capture]
+    F5[Validator contradiction] --> H5[1 revision pass<br/>recheck<br/>flag if unresolved]
+    F6[Missing/bad API key] --> H6[Fail fast at Run<br/>no half-state]
+  end
+        </div>
+
+        <h3 class="arch-h3">Why this shape</h3>
+        <ul class="arch-list">
+          <li><b>Haiku for routing, Sonnet for judgment.</b> Parser + Retriever
+            are chatty and low-stakes — Haiku gives ~4&times; cost cut without
+            quality loss. Drafter, Validator, Reviser need the bigger model.</li>
+          <li><b>Validator as a separate agent.</b> The brief calls cross-answer
+            consistency the #1 failure mode. A drafter looking at one question
+            at a time can't catch contradictions; a validator with the full
+            set does.</li>
+          <li><b>Bounded revision + recheck.</b> 1 revision pass is enough in
+            practice and avoids spin. If the contradiction survives, we ship
+            with a flag rather than loop forever.</li>
+          <li><b>Pure browser.</b> Zero backend. Paste API key, paste RFP,
+            run. Same agent contract is mirrored in the Jupyter notebook for
+            anyone who wants to extend the KB or run evals locally.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <aside class="trace">
+    <h3>Live trace</h3>
+    <div class="trace-list" id="traceList"></div>
+  </aside>
+
+  <section class="chatbar">
+    <div class="chat-head">
+      <span class="label">Follow-up chat — grounded on run output</span>
+      <span class="label" id="chatHint">Enabled after a successful run</span>
+    </div>
+    <div id="chatLog" class="chat-log"></div>
+    <div class="chat-row">
+      <input id="chatInput" type="text" placeholder="Ask a follow-up question about the answers..." disabled>
+      <button id="chatBtn" class="ghost" disabled>Send</button>
+    </div>
+  </section>
+</main>
+
+<script>
+// ---------- safe DOM helpers ----------
+function clearNode(n) { while (n && n.firstChild) n.removeChild(n.firstChild); }
+
+// ====================================================================
+// Knowledge base — ported verbatim from notebook Part 2
+// ====================================================================
+const KNOWLEDGE_BASE = {
+  threat_detection: {
+    source: "Helios Platform Architecture Doc v4.2",
+    content: "Helios Sentinel uses a multi-layered detection engine combining signature-based matching, behavioral analysis, and ML-driven anomaly detection. Data sources include endpoint telemetry (process events, file system changes, network connections), cloud workload logs (AWS CloudTrail, Azure Activity Log, GCP Audit Log), network flow data (NetFlow v9/IPFIX), and email gateway events. Average detection-to-alert latency is 2.3 seconds for signature matches and 18 seconds for behavioral detections. Our SIEM correlation engine processes up to 50,000 events per second per tenant.",
+    tags: ["technical","detection","latency","architecture"]
+  },
+  compliance_certs: {
+    source: "Helios Compliance & Certifications Register 2025",
+    content: "Current certifications: SOC 2 Type II (audited December 2024 by Deloitte), ISO 27001:2022 (certified March 2024 by BSI), FedRAMP Moderate (authorized June 2024, sponsored by DHS), HIPAA (BAA available, last assessment October 2024), PCI DSS v4.0 Level 1 Service Provider (validated September 2024 by Coalfire). StateRAMP authorized (January 2025). All certifications maintained on continuous monitoring basis with quarterly internal audits.",
+    tags: ["compliance","certifications","audit","soc2","fedramp"]
+  },
+  pricing_model: {
+    source: "Helios Commercial Pricing Sheet Q1 2025",
+    content: "Endpoint Protection Platform (EPP+EDR bundle): 500 endpoints: $18/seat/month ($108,000/year). 1,000 endpoints: $15/seat/month ($180,000/year) — 17% volume discount. 5,000 endpoints: $11/seat/month ($660,000/year) — 39% volume discount. Minimum contract term: 12 months. Multi-year discounts: 2-year = additional 5%, 3-year = additional 10%. SIEM add-on: +$6/seat/month. MDR add-on: +$12/seat/month. All pricing excludes professional services.",
+    tags: ["pricing","commercial","discount","contract"]
+  },
+  financial_services_customers: {
+    source: "Helios Customer Success — Vertical Report 2024",
+    content: "Helios currently serves 47 customers in financial services, including 12 banks, 8 insurance carriers, 15 asset management firms, and 12 fintech companies. Reference accounts (approved for external use): 1) Meridian National Bank — 3,200 endpoints, EPP+EDR+SIEM, deployed since 2022. 2) Crestview Capital Partners — 850 endpoints, EPP+MDR, deployed since 2023. 3) Apex Insurance Group — 5,100 endpoints, full platform, deployed since 2021. Average NPS in financial services vertical: 72.",
+    tags: ["company-info","customers","financial-services","references"]
+  },
+  data_residency_eu: {
+    source: "Helios Data Sovereignty & Privacy Whitepaper v3.1",
+    content: "Helios supports full EU data residency through dedicated infrastructure in Frankfurt (AWS eu-central-1) and Dublin (AWS eu-west-1). Customer data never leaves the selected region. Encryption at rest: AES-256-GCM with customer-managed keys (AWS KMS or BYOK). Encryption in transit: TLS 1.3 for all API and agent communications, with certificate pinning for endpoint agents. GDPR Data Processing Agreement (DPA) included in all EU contracts. Annual third-party penetration testing by NCC Group. Data retention: configurable per tenant, default 90 days for raw telemetry, 13 months for aggregated alerts.",
+    tags: ["technical","compliance","data-residency","eu","encryption","gdpr"]
+  },
+  past_rfp_detection_answer: {
+    source: "Acme Corp RFP Response — March 2024",
+    content: "Q: Describe your real-time threat detection capabilities. A: Helios Sentinel provides sub-3-second detection for known threat patterns and under 20 seconds for behavioral anomalies. Our detection engine ingests endpoint telemetry, network flows, cloud audit logs, and email events. The SIEM correlation engine handles 50K EPS per tenant. We maintain a 99.7% true positive rate on our top 100 detection rules, validated quarterly against MITRE ATT&CK framework.",
+    tags: ["technical","detection","past-rfp"]
+  },
+  past_rfp_compliance_answer: {
+    source: "NovaTech RFP Response — July 2024",
+    content: "Q: What compliance certifications do you hold? A: Helios holds SOC 2 Type II, ISO 27001, FedRAMP Moderate, PCI DSS v4.0, and HIPAA compliance. All certifications are actively maintained with continuous monitoring. We provide audit reports upon request under NDA. Our security team of 14 full-time engineers manages compliance programs.",
+    tags: ["compliance","certifications","past-rfp"]
+  }
+};
+
+function searchKB(query, category) {
+  const qTerms = new Set(String(query||"").toLowerCase().split(/\s+/).filter(Boolean));
+  const results = [];
+  for (const [id, entry] of Object.entries(KNOWLEDGE_BASE)) {
+    const text = (entry.content + " " + entry.tags.join(" ")).toLowerCase();
+    const tokens = new Set(text.split(/\s+/));
+    let overlap = 0;
+    qTerms.forEach(t => { if (tokens.has(t)) overlap++; });
+    if (category && entry.tags.map(t=>t.toLowerCase()).includes(String(category).toLowerCase())) overlap += 5;
+    if (overlap > 0) results.push({ id, source: entry.source, content: entry.content, relevance_score: overlap });
+  }
+  results.sort((a,b)=>b.relevance_score - a.relevance_score);
+  return results.slice(0,3);
+}
+
+const SEARCH_KB_TOOL = {
+  name: "search_kb",
+  description: "Search the Helios Security knowledge base for information relevant to answering an RFP question. Returns up to 3 matching documents with source attribution.",
+  input_schema: {
+    type: "object",
+    properties: {
+      query: { type:"string", description:"Search query — use keywords from the RFP question" },
+      category: { type:"string", enum:["technical","compliance","pricing","company-info"], description:"Optional category filter" }
+    },
+    required: ["query"]
+  }
+};
+
+// ====================================================================
+// Synthetic RFPs (5 shapes)
+// ====================================================================
+const SAMPLE_RFPS = {
+  a: `# Helios Cybersecurity RFP — Baseline
+
+| ID | Category | Question |
+|----|----------|----------|
+| Q1 | technical | Describe your platform's approach to real-time threat detection. What data sources are ingested, and what is the average detection-to-alert latency? |
+| Q2 | compliance | List all compliance certifications your organization currently holds (SOC 2, ISO 27001, FedRAMP, etc.) and the date of most recent audit for each. |
+| Q3 | pricing | Provide per-seat pricing for 500, 1,000, and 5,000 endpoints. Are volume discounts available? Is there a minimum contract term? |
+| Q4 | company-info | How many customers do you currently serve in the financial services vertical? Provide 2–3 reference accounts. |
+| Q5 | technical | How does your platform handle data residency requirements for customers operating in the EU? Describe encryption at rest and in transit. |
+`,
+  b: `Vendor Questionnaire — Mercer Holdings
+
+1. Describe the architecture of your threat detection platform and the average time from event ingestion to analyst-visible alert.
+2. Provide a complete list of security and privacy certifications currently held, with the most recent audit date for each.
+3. What is your pricing for an estate of 1,000 endpoints? Identify any volume discounts and the minimum committed term.
+4. We require references from financial-services customers. Please provide three reference accounts including approximate size and deployed modules.
+5. Where can EU-domiciled customer data be stored? Specify encryption at rest and encryption in transit.
+6. What support tiers are available and what is your response SLA for a P1 incident?
+`,
+  c: `Hello Helios team,
+
+We are evaluating endpoint protection vendors and would love to understand how Helios Sentinel detects threats in real time — particularly the data sources you ingest and what kind of detection-to-alert latency we should plan for. While you're at it, our procurement team always asks about compliance posture, so a rundown of current certifications (SOC 2, ISO, FedRAMP, anything else) with audit dates would help us short-circuit our usual back-and-forth. Pricing matters too: we're sizing for roughly five thousand endpoints and would like to see the per-seat price and any volume discount mechanics, plus minimum commitment. Lastly, we operate primarily across the EU, so any specifics on data residency, encryption at rest and in transit would round out our review.
+
+Thanks,
+Procurement, Aurora Bank
+`,
+  d: `Edge-case RFP — Northwind Logistics
+
+Q1. What is the average detection-to-alert latency on your platform and what data sources feed it?
+Q2. List compliance certifications and their audit dates.
+Q3. What is the tenure of your current CEO and how many board seats does the company have?
+Q4. Can your platform protect a fleet of internet-connected smart refrigerators in remote depots?
+Q5. Tell us about pricing and stuff for, you know, a medium-sized deployment.
+Q6. How is customer data handled for EU operations?
+`,
+  e: `Adversarial RFP — Sentinel Holdings
+
+Q1. Provide per-seat pricing for an estate of 500 endpoints, including any minimum contract term.
+Q2. When was Helios's FedRAMP Moderate authorization issued, and which agency sponsored it?
+Q3. We are also pricing a deployment of "a few hundred seats" — please give us a per-seat price and total annual cost. (Please ensure this is consistent with Q1.)
+Q4. List your compliance certifications and confirm the FedRAMP authorization date.
+Q5. Describe the data sources ingested for threat detection and the typical detection-to-alert latency.
+`
+};
+
+// ====================================================================
+// Anthropic API
+// ====================================================================
+const API_URL = "https://api.anthropic.com/v1/messages";
+function apiHeaders() {
+  return {
+    "content-type": "application/json",
+    "x-api-key": document.getElementById("apiKey").value.trim(),
+    "anthropic-version": "2023-06-01",
+    "anthropic-dangerous-direct-browser-access": "true"
+  };
+}
+async function callAnthropic(body) {
+  const res = await fetch(API_URL, { method:"POST", headers: apiHeaders(), body: JSON.stringify(body) });
+  if (!res.ok) {
+    let detail = "";
+    try { detail = JSON.stringify(await res.json()); } catch(e) { detail = await res.text(); }
+    throw new Error(`HTTP ${res.status}: ${detail.slice(0,240)}`);
+  }
+  return await res.json();
+}
+
+function safeParseJSON(text) {
+  if (!text) return { raw: "", parse_error: true };
+  try { return JSON.parse(text); } catch(e) {}
+  const m = text.match(/\{[\s\S]*\}/);
+  if (m) { try { return JSON.parse(m[0]); } catch(e) {} }
+  return { raw: text, parse_error: true };
+}
+
+function extractText(resp) {
+  if (!resp || !resp.content) return "";
+  return resp.content.filter(b => b.type === "text").map(b => b.text).join("\n").trim();
+}
+
+// ====================================================================
+// State + UI
+// ====================================================================
+const state = {
+  mode: "parallel",
+  questions: [],
+  cards: {},
+  trace: [],
+  finalAnswers: [],
+  validation: null,
+  runStartedAt: 0,
+  runDurationMs: 0,
+  revisionCount: 0
+};
+
+function ts() { return new Date().toTimeString().slice(0,8); }
+
+function logTrace(role, target, outcome, latency, level) {
+  const entry = { ts: ts(), role, target: target||"", outcome: outcome||"", latency: latency||null, level: level||"" };
+  state.trace.push(entry);
+  const list = document.getElementById("traceList");
+  const div = document.createElement("div");
+  div.className = "trace-entry" + (level ? " " + level : "");
+  const ts1 = document.createElement("span"); ts1.className = "ts"; ts1.textContent = entry.ts;
+  const role1 = document.createElement("span"); role1.className = "role"; role1.textContent = role + (target ? " " + target : "");
+  const out1 = document.createElement("span"); out1.textContent = outcome || "";
+  const lat1 = document.createElement("span"); lat1.className = "latency"; lat1.textContent = latency != null ? latency + "ms" : "";
+  div.appendChild(ts1); div.appendChild(role1); div.appendChild(out1); div.appendChild(lat1);
+  list.appendChild(div);
+  list.scrollTop = list.scrollHeight;
+}
+
+function renderCard(qid) {
+  const c = state.cards[qid];
+  if (!c) return;
+  let node = document.getElementById("card-" + qid);
+  if (!node) {
+    node = document.createElement("div");
+    node.id = "card-" + qid;
+    document.getElementById("cards").appendChild(node);
+  }
+  let cls = "card state-" + c.state;
+  if (c.state === "final") {
+    if (c.failed) cls += " failed";
+    else if ((c.flags && c.flags.length) || c.parse_error) cls += " flagged";
+    else cls += " ok";
+  }
+  node.className = cls;
+  clearNode(node);
+
+  const head = document.createElement("div"); head.className = "card-head";
+  const idEl = document.createElement("span"); idEl.className = "card-id"; idEl.textContent = qid;
+  const right = document.createElement("span");
+  const catB = document.createElement("span"); catB.className = "badge cat"; catB.textContent = c.category || "—";
+  const stB = document.createElement("span"); stB.className = "badge"; stB.textContent = c.state;
+  stB.style.marginLeft = "6px";
+  right.appendChild(catB); right.appendChild(stB);
+  head.appendChild(idEl); head.appendChild(right);
+  node.appendChild(head);
+
+  const qt = document.createElement("div"); qt.className = "qtext"; qt.textContent = c.text || "";
+  node.appendChild(qt);
+
+  if (c.answer) {
+    const ans = document.createElement("div"); ans.className = "answer"; ans.textContent = c.answer;
+    node.appendChild(ans);
+  }
+  const meta = document.createElement("div"); meta.className = "meta";
+  if (c.sources) {
+    const p = document.createElement("span"); p.className = "pill"; p.textContent = "src×" + c.sources.length;
+    meta.appendChild(p);
+  }
+  if (c.confidence) {
+    const p = document.createElement("span"); p.className = "pill conf-" + c.confidence; p.textContent = "conf: " + c.confidence;
+    meta.appendChild(p);
+  }
+  if (c.kb_gap) {
+    const p = document.createElement("span"); p.className = "pill"; p.textContent = "kb-gap";
+    meta.appendChild(p);
+  }
+  if (c.revised) {
+    const p = document.createElement("span"); p.className = "pill"; p.textContent = "revised";
+    meta.appendChild(p);
+  }
+  node.appendChild(meta);
+
+  if (c.flags && c.flags.length) {
+    const f = document.createElement("div"); f.className = "flags"; f.textContent = "flags: " + c.flags.join(", ");
+    node.appendChild(f);
+  }
+  if (c.error) {
+    const e = document.createElement("div"); e.className = "err"; e.textContent = "error: " + c.error;
+    node.appendChild(e);
+  }
+}
+
+function setCardState(qid, s, patch) {
+  if (!state.cards[qid]) state.cards[qid] = { id: qid, state: s };
+  state.cards[qid].state = s;
+  if (patch) Object.assign(state.cards[qid], patch);
+  renderCard(qid);
+}
+
+function renderScoreboard() {
+  const sb = document.getElementById("scoreboard");
+  clearNode(sb);
+  const total = state.questions.length;
+  const cards = Object.values(state.cards);
+  const ok = cards.filter(c => c.state==="final" && !c.failed && !(c.flags && c.flags.length)).length;
+  const flagged = cards.filter(c => c.state==="final" && c.flags && c.flags.length && !c.failed).length;
+  const failed = cards.filter(c => c.failed).length;
+  const items = [
+    ["Questions", total],
+    ["OK", ok],
+    ["Flagged", flagged],
+    ["Failed", failed],
+    ["Revisions", state.revisionCount],
+    ["Duration", state.runDurationMs ? (state.runDurationMs/1000).toFixed(1) + "s" : "—"]
+  ];
+  for (const [lbl,val] of items) {
+    const t = document.createElement("div"); t.className = "score-tile";
+    const l = document.createElement("div"); l.className = "lbl"; l.textContent = lbl;
+    const v = document.createElement("div"); v.className = "val"; v.textContent = String(val);
+    t.appendChild(l); t.appendChild(v); sb.appendChild(t);
+  }
+}
+
+// ====================================================================
+// Agents
+// ====================================================================
+const PARSER_SYS = `You are an RFP question parser. Given raw RFP text, extract individual questions.
+
+Return ONLY a JSON object of this shape (no prose, no markdown fences):
+{
+  "questions": [
+    {"id": "Q1", "category": "technical|compliance|pricing|company-info|other", "text": "..."}
+  ],
+  "parse_quality": "high|medium|low"
+}
+
+Categorize each question into exactly one of: technical, compliance, pricing, company-info, other.
+If the RFP is malformed or you cannot reliably extract structure, set parse_quality to "low" and fall back to blank-line chunking. Always return at least one question if any text is present.`;
+
+async function runParser(rfpText, model) {
+  const t0 = performance.now();
+  const resp = await callAnthropic({
+    model, max_tokens: 2048, system: PARSER_SYS,
+    messages: [{ role:"user", content: `RFP TEXT:\n\n${rfpText}` }]
+  });
+  const txt = extractText(resp);
+  const parsed = safeParseJSON(txt);
+  const lat = Math.round(performance.now() - t0);
+  if (parsed.parse_error || !parsed.questions) {
+    const chunks = rfpText.split(/\n\s*\n/).map(s => s.trim()).filter(s => s.length > 10);
+    const qs = chunks.slice(0, 12).map((t,i) => ({ id:"Q"+(i+1), category:"other", text: t }));
+    logTrace("parser", "", "fallback chunking → " + qs.length + " Qs", lat, "warn");
+    return { questions: qs, parse_quality: "low" };
+  }
+  logTrace("parser", "", parsed.questions.length + " Qs, quality=" + (parsed.parse_quality||"?"), lat);
+  return parsed;
+}
+
+const RETRIEVER_SYS = `You are a retrieval agent. Given an RFP question, call the search_kb tool one or more times (max 4 calls) to gather the most relevant source documents. Then return ONLY a JSON object:
+{"hits": [{"id":"...","source":"...","content":"...","relevance_score":N}], "kb_gap": true|false}
+Set kb_gap=true if no result is meaningfully relevant. Do not fabricate hits.`;
+
+async function runRetriever(question, model) {
+  const t0 = performance.now();
+  let messages = [{ role:"user", content: `Question (${question.category}): ${question.text}` }];
+  let lastHits = [];
+  for (let turn = 0; turn < 4; turn++) {
+    const resp = await callAnthropic({
+      model, max_tokens: 1024, system: RETRIEVER_SYS, tools: [SEARCH_KB_TOOL], messages
+    });
+    if (resp.stop_reason === "tool_use") {
+      messages.push({ role:"assistant", content: resp.content });
+      const toolResults = [];
+      for (const b of resp.content) {
+        if (b.type === "tool_use") {
+          const r = searchKB(b.input.query, b.input.category);
+          lastHits = r;
+          toolResults.push({ type:"tool_result", tool_use_id: b.id, content: JSON.stringify(r) });
+        }
+      }
+      messages.push({ role:"user", content: toolResults });
+      continue;
+    }
+    const txt = extractText(resp);
+    const parsed = safeParseJSON(txt);
+    const lat = Math.round(performance.now() - t0);
+    if (parsed.parse_error || !parsed.hits) {
+      logTrace("retriever", question.id, (lastHits.length||0) + " hits (fallback)", lat, "warn");
+      return { hits: lastHits, kb_gap: lastHits.length === 0 };
+    }
+    logTrace("retriever", question.id, parsed.hits.length + " hits" + (parsed.kb_gap ? " · kb-gap" : ""), lat);
+    return parsed;
+  }
+  const lat = Math.round(performance.now() - t0);
+  logTrace("retriever", question.id, "max turns; " + lastHits.length + " hits", lat, "warn");
+  return { hits: lastHits, kb_gap: lastHits.length === 0 };
+}
+
+const DRAFTER_SYS = `You are an RFP drafter for Helios Security. Given a question and retrieved knowledge-base hits, draft a polished, specific, professional answer grounded in the sources.
+
+Return ONLY this JSON shape:
+{
+  "question_id": "...",
+  "category": "...",
+  "answer": "...",
+  "sources": ["Source Name 1", ...],
+  "confidence": "high|medium|low",
+  "flags": ["..."]
+}
+
+Rules:
+- Cite only sources that appear in the hits.
+- If kb_gap=true OR the hits do not cover the question, set confidence=low and add "kb-gap" to flags. Acknowledge the gap narratively; never invent numbers, dates, or commitments.
+- Be concrete: use specific numbers from the hits where present.
+- Keep the answer 3–6 sentences.`;
+
+async function runDrafter(question, hits, kbGap, model) {
+  const t0 = performance.now();
+  const userMsg = `Question ID: ${question.id}\nCategory: ${question.category}\nQuestion: ${question.text}\n\nkb_gap: ${kbGap}\nHits:\n${JSON.stringify(hits, null, 2)}`;
+  const resp = await callAnthropic({ model, max_tokens: 1536, system: DRAFTER_SYS, messages: [{role:"user", content: userMsg}] });
+  const txt = extractText(resp);
+  const parsed = safeParseJSON(txt);
+  const lat = Math.round(performance.now() - t0);
+  if (parsed.parse_error || !parsed.answer) {
+    logTrace("drafter", question.id, "JSON parse fallback", lat, "warn");
+    return {
+      question_id: question.id, category: question.category,
+      answer: parsed.raw || "(no answer)", sources: [], confidence: "low",
+      flags: ["parse_error"], parse_error: true
+    };
+  }
+  logTrace("drafter", question.id, "conf=" + parsed.confidence + (parsed.flags && parsed.flags.length ? " flags=" + parsed.flags.join(",") : ""), lat);
+  return parsed;
+}
+
+const VALIDATOR_SYS = `You are a cross-answer consistency validator for an RFP response.
+
+Given the full set of drafted answers, identify any:
+- contradiction: two answers state different facts (dates, numbers, names) about the same topic
+- tone-drift: tone or formality is inconsistent
+- unsupported-claim: an answer asserts something not present in its cited sources
+
+Return ONLY this JSON:
+{
+  "issues": [
+    {"question_id": "Q2", "issue_type": "contradiction|tone-drift|unsupported-claim", "detail": "short reason"}
+  ]
+}
+If everything is consistent, return {"issues": []}.`;
+
+async function runValidator(drafts, model) {
+  const t0 = performance.now();
+  const resp = await callAnthropic({
+    model, max_tokens: 1536, system: VALIDATOR_SYS,
+    messages: [{ role:"user", content: "DRAFTS:\n" + JSON.stringify(drafts, null, 2) }]
+  });
+  const txt = extractText(resp);
+  const parsed = safeParseJSON(txt);
+  const lat = Math.round(performance.now() - t0);
+  if (parsed.parse_error || !parsed.issues) {
+    logTrace("validator", "", "parse fallback; 0 issues", lat, "warn");
+    return { issues: [] };
+  }
+  logTrace("validator", "", parsed.issues.length + " issue(s)", lat, parsed.issues.length ? "warn" : "good");
+  return parsed;
+}
+
+const REVISER_SYS = `You are a reviser. You are given an original drafted answer, the retrieved hits, and a critique from the validator. Produce an updated answer that resolves the critique while remaining grounded in the hits.
+
+Return ONLY the same JSON shape as the drafter:
+{"question_id":"...","category":"...","answer":"...","sources":[...],"confidence":"high|medium|low","flags":[...]}
+
+If the critique cannot be fully resolved from the available hits, add "unresolved-contradiction" to flags rather than fabricate.`;
+
+async function runReviser(question, hits, originalDraft, critique, model) {
+  const t0 = performance.now();
+  const userMsg = `Question ID: ${question.id}\nCategory: ${question.category}\nQuestion: ${question.text}\n\nHits:\n${JSON.stringify(hits,null,2)}\n\nOriginal draft:\n${JSON.stringify(originalDraft,null,2)}\n\nValidator critique:\n${JSON.stringify(critique,null,2)}`;
+  const resp = await callAnthropic({ model, max_tokens: 1536, system: REVISER_SYS, messages: [{role:"user", content: userMsg}] });
+  const txt = extractText(resp);
+  const parsed = safeParseJSON(txt);
+  const lat = Math.round(performance.now() - t0);
+  if (parsed.parse_error || !parsed.answer) {
+    logTrace("reviser", question.id, "parse fallback", lat, "warn");
+    return Object.assign({}, originalDraft, { flags: (originalDraft.flags||[]).concat(["revision-parse-error"]) });
+  }
+  logTrace("reviser", question.id, "revised · conf=" + parsed.confidence, lat, "good");
+  return parsed;
+}
+
+// ====================================================================
+// Orchestrator
+// ====================================================================
+async function processQuestion(q, modelHaiku, modelSonnet) {
+  setCardState(q.id, "retrieving", { text: q.text, category: q.category });
+  let hits = [], kbGap = true;
+  try {
+    const r = await runRetriever(q, modelHaiku);
+    hits = r.hits || []; kbGap = !!r.kb_gap;
+    setCardState(q.id, "drafting", { sources: hits.map(h=>h.source), kb_gap: kbGap });
+  } catch (e) {
+    logTrace("retriever", q.id, "ERROR " + e.message, null, "bad");
+    setCardState(q.id, "final", { failed: true, error: e.message });
+    return null;
+  }
+  try {
+    const draft = await runDrafter(q, hits, kbGap, modelSonnet);
+    setCardState(q.id, "final", {
+      answer: draft.answer, sources: draft.sources || [], confidence: draft.confidence,
+      flags: draft.flags || [], parse_error: !!draft.parse_error
+    });
+    return { draft, hits };
+  } catch (e) {
+    logTrace("drafter", q.id, "ERROR " + e.message, null, "bad");
+    setCardState(q.id, "final", { failed: true, error: e.message });
+    return null;
+  }
+}
+
+async function runPipeline() {
+  const apiKey = document.getElementById("apiKey").value.trim();
+  const rfp = document.getElementById("rfpInput").value.trim();
+  const errEl = document.getElementById("runErr");
+  errEl.textContent = "";
+  if (!apiKey) { errEl.textContent = "Anthropic API key is required."; return; }
+  if (!rfp) { errEl.textContent = "Paste an RFP or load a sample."; return; }
+
+  state.questions = []; state.cards = {}; state.trace = [];
+  state.finalAnswers = []; state.validation = null; state.revisionCount = 0;
+  clearNode(document.getElementById("cards"));
+  clearNode(document.getElementById("traceList"));
+  clearNode(document.getElementById("scoreboard"));
+  clearNode(document.getElementById("chatLog"));
+  document.getElementById("exportBtn").disabled = true;
+  document.getElementById("chatInput").disabled = true;
+  document.getElementById("chatBtn").disabled = true;
+  document.getElementById("dashSub").textContent = "Running...";
+  state.runStartedAt = performance.now();
+
+  const modelHaiku = document.getElementById("modelHaiku").value;
+  const modelSonnet = document.getElementById("modelSonnet").value;
+  const maxRev = parseInt(document.getElementById("maxRev").value, 10) || 0;
+  const mode = state.mode;
+
+  const runBtn = document.getElementById("runBtn");
+  runBtn.disabled = true; runBtn.textContent = "RUNNING...";
+
+  try {
+    let parsed;
+    try {
+      parsed = await runParser(rfp, modelHaiku);
+    } catch(e) {
+      logTrace("parser", "", "ERROR " + e.message, null, "bad");
+      errEl.textContent = "Parser failed: " + e.message;
+      return;
+    }
+    const qs = (parsed.questions||[]).map((q,i) => ({
+      id: q.id || ("Q"+(i+1)),
+      category: q.category || "other",
+      text: q.text || ""
+    }));
+    state.questions = qs;
+    qs.forEach(q => setCardState(q.id, "pending", { text: q.text, category: q.category }));
+    renderScoreboard();
+
+    const ctxByQ = {};
+    if (mode === "parallel") {
+      const settled = await Promise.allSettled(qs.map(q => processQuestion(q, modelHaiku, modelSonnet)));
+      settled.forEach((r, i) => { if (r.status === "fulfilled" && r.value) ctxByQ[qs[i].id] = r.value; });
+    } else {
+      for (const q of qs) {
+        const r = await processQuestion(q, modelHaiku, modelSonnet);
+        if (r) ctxByQ[q.id] = r;
+      }
+    }
+    renderScoreboard();
+
+    const drafts = qs.map(q => ctxByQ[q.id] ? ctxByQ[q.id].draft : null).filter(Boolean);
+    let validation = { issues: [] };
+    if (drafts.length > 0) {
+      try { validation = await runValidator(drafts, modelSonnet); }
+      catch (e) { logTrace("validator", "", "ERROR " + e.message, null, "bad"); }
+    }
+    state.validation = validation;
+
+    for (const issue of (validation.issues || [])) {
+      const c = state.cards[issue.question_id];
+      if (c) {
+        c.flags = (c.flags || []).concat([issue.issue_type + ":" + (issue.detail||"").slice(0,60)]);
+        renderCard(issue.question_id);
+      }
+    }
+
+    if (maxRev > 0 && validation.issues && validation.issues.length > 0) {
+      const issuesByQ = {};
+      for (const i of validation.issues) {
+        (issuesByQ[i.question_id] = issuesByQ[i.question_id] || []).push(i);
+      }
+      for (const qid of Object.keys(issuesByQ)) {
+        const ctx = ctxByQ[qid];
+        const q = qs.find(x => x.id === qid);
+        if (!ctx || !q) continue;
+        for (let pass = 0; pass < maxRev; pass++) {
+          setCardState(qid, "revising");
+          try {
+            const revised = await runReviser(q, ctx.hits, ctx.draft, issuesByQ[qid], modelSonnet);
+            ctx.draft = revised;
+            state.revisionCount++;
+            setCardState(qid, "final", {
+              answer: revised.answer, sources: revised.sources || [],
+              confidence: revised.confidence, flags: revised.flags || [], revised: true
+            });
+          } catch (e) {
+            logTrace("reviser", qid, "ERROR " + e.message, null, "bad");
+            const c = state.cards[qid];
+            if (c) { c.flags = (c.flags||[]).concat(["revision-failed"]); renderCard(qid); }
+            break;
+          }
+        }
+      }
+
+      // Re-validate once after the bounded revision pass(es). Any issue that
+      // survives is flagged unresolved-contradiction on the affected card and
+      // we ship — spec failure-mode #5.
+      try {
+        const revisedDrafts = qs.map(q => ctxByQ[q.id]?.draft).filter(Boolean);
+        const recheck = await runValidator(revisedDrafts, modelSonnet);
+        state.validation = recheck;
+        for (const issue of (recheck.issues || [])) {
+          const c = state.cards[issue.question_id];
+          if (c && !(c.flags||[]).includes("unresolved-contradiction")) {
+            c.flags = (c.flags || []).concat(["unresolved-contradiction"]);
+            renderCard(issue.question_id);
+          }
+          const ctx = ctxByQ[issue.question_id];
+          if (ctx && ctx.draft) {
+            ctx.draft.flags = (ctx.draft.flags || []).concat(["unresolved-contradiction"]);
+          }
+        }
+      } catch (e) {
+        logTrace("validator", "", "recheck ERROR " + e.message, null, "bad");
+      }
+    }
+
+    state.finalAnswers = qs.map(q => ctxByQ[q.id] ? ctxByQ[q.id].draft : {
+      question_id: q.id, category: q.category, answer: null, sources: [], confidence: "low",
+      flags: ["agent-failed"], failed: true
+    });
+    state.runDurationMs = Math.round(performance.now() - state.runStartedAt);
+    renderScoreboard();
+    document.getElementById("dashSub").textContent =
+      `${qs.length} questions · ${(validation.issues||[]).length} validator issue(s) · ${state.revisionCount} revision(s)`;
+    document.getElementById("exportBtn").disabled = false;
+    document.getElementById("chatInput").disabled = false;
+    document.getElementById("chatBtn").disabled = false;
+    document.getElementById("chatInput").placeholder = "Ask a follow-up about this RFP response...";
+    document.getElementById("chatHint").textContent = "Ready · grounded on " + qs.length + " answers";
+  } catch (e) {
+    errEl.textContent = "Run failed: " + e.message;
+  } finally {
+    runBtn.disabled = false;
+    runBtn.textContent = "RUN AGENT TEAM";
+  }
+}
+
+// ====================================================================
+// Chat
+// ====================================================================
+async function sendChat() {
+  const inp = document.getElementById("chatInput");
+  const msg = inp.value.trim();
+  if (!msg) return;
+  inp.value = "";
+  const log = document.getElementById("chatLog");
+  const u = document.createElement("div"); u.className = "chat-msg user"; u.textContent = msg; log.appendChild(u);
+  const a = document.createElement("div"); a.className = "chat-msg assistant"; a.textContent = "..."; log.appendChild(a);
+  log.scrollTop = log.scrollHeight;
+  const ctx = { answers: state.finalAnswers, validation: state.validation };
+  try {
+    const resp = await callAnthropic({
+      model: document.getElementById("modelSonnet").value,
+      max_tokens: 1024,
+      system: "You are answering follow-up questions about a just-completed RFP response. Use the provided final answers as your only source of truth. Be concise and specific.",
+      messages: [{ role:"user", content: `RFP RUN CONTEXT:\n${JSON.stringify(ctx, null, 2)}\n\nFOLLOW-UP: ${msg}` }]
+    });
+    a.textContent = extractText(resp) || "(no response)";
+  } catch (e) {
+    a.textContent = "Error: " + e.message;
+  }
+  log.scrollTop = log.scrollHeight;
+}
+
+// ====================================================================
+// Export
+// ====================================================================
+function exportJSON() {
+  const out = {
+    rfp_name: "Helios RFP — browser run",
+    total_questions: state.questions.length,
+    answers: state.finalAnswers,
+    validation: state.validation,
+    metadata: {
+      model_drafter: document.getElementById("modelSonnet").value,
+      model_parser: document.getElementById("modelHaiku").value,
+      kb_entries: Object.keys(KNOWLEDGE_BASE).length,
+      run_duration_ms: state.runDurationMs,
+      revisions: state.revisionCount,
+      generated_at: new Date().toISOString()
+    }
+  };
+  const blob = new Blob([JSON.stringify(out, null, 2)], { type:"application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "helios_rfp_response.json"; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+
+// ====================================================================
+// Wire up
+// ====================================================================
+document.getElementById("runBtn").addEventListener("click", runPipeline);
+document.getElementById("exportBtn").addEventListener("click", exportJSON);
+document.getElementById("chatBtn").addEventListener("click", sendChat);
+document.getElementById("chatInput").addEventListener("keydown", e => { if (e.key === "Enter") sendChat(); });
+document.getElementById("sampleSel").addEventListener("change", e => {
+  const k = e.target.value;
+  if (k && SAMPLE_RFPS[k]) document.getElementById("rfpInput").value = SAMPLE_RFPS[k];
+});
+document.querySelectorAll("#modeSeg button").forEach(b => {
+  b.addEventListener("click", () => {
+    document.querySelectorAll("#modeSeg button").forEach(x => x.classList.remove("active"));
+    b.classList.add("active"); state.mode = b.dataset.mode;
+  });
+});
+
+// API key resolution: env (via launcher) -> localStorage -> manual paste.
+// Persist any pasted key so the next reload skips the paste step.
+(async function hydrateApiKey() {
+  const input = document.getElementById("apiKey");
+  try {
+    const r = await fetch("/api/env-key", { cache: "no-store" });
+    if (r.ok) {
+      const j = await r.json();
+      if (j && j.ANTHROPIC_API_KEY) {
+        input.value = j.ANTHROPIC_API_KEY;
+        input.placeholder = "loaded from environment";
+        return;
+      }
+    }
+  } catch (_) { /* opened via file:// or no launcher — fall through */ }
+  try {
+    const cached = localStorage.getItem("helios_api_key");
+    if (cached) { input.value = cached; input.placeholder = "loaded from browser cache"; }
+  } catch (_) {}
+})();
+// Tabs: Run / Architecture. Lazy-render Mermaid on first arch click.
+let __archRendered = false;
+document.querySelectorAll(".dash-tabs .tab").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    const target = btn.dataset.tab;
+    document.querySelectorAll(".dash-tabs .tab").forEach(b => b.classList.toggle("active", b === btn));
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.toggle("hidden", p.dataset.panel !== target));
+    if (target === "arch" && !__archRendered && window.__renderMermaid) {
+      __archRendered = true;
+      try { await window.__renderMermaid(); }
+      catch (e) { console.error("mermaid render failed", e); __archRendered = false; }
+    }
+  });
+});
+
+document.getElementById("apiKey").addEventListener("change", e => {
+  try { if (e.target.value.trim()) localStorage.setItem("helios_api_key", e.target.value.trim()); } catch (_) {}
+});
+</script>
+</body>
+</html>

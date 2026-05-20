@@ -1,18 +1,61 @@
-# Agent Build Hackathon · MiniHack
+# Helios RFP Agent — Multi-Agent Build
 
-## What you're building
-An AI agent that automates RFP (Request for Proposal) responses for a cybersecurity vendor. You'll build an agent that parses a questionnaire into categorized questions, retrieves relevant material from a knowledge base, and generates structured answers — designing for **flexibility and robustness**, because the RFP your agent has to handle at the end of the session won't be the one you developed against.
+Multi-agent RFP responder for Helios Security · built for the Day 2 Agent Hackathon.
 
-This is a solo build. You're strongly encouraged to bounce ideas off the people around you — sketch architectures together, compare tool designs, debug each other's tool-use loops — but each person ships their own agent.
+## What this is
 
-## Main learning
-How to design and build a multi-step agentic system under time pressure, the way you would in a real AAI engagement. You'll make real tradeoffs on tool design, retrieval strategy, and output quality — and your agent's robustness will get tested against questions you haven't seen.
+A five-agent team — **Parser → Retriever → Drafter → Validator → Reviser** — that turns an unseen RFP into a structured, cited, internally-consistent response. The notebook is the explainer and the source of truth for the agent code; `helios_agent.html` is a self-contained, Bounteous-branded browser UI that runs the same pipeline with no backend. Robustness is the grading bar: the agent has to handle an RFP it wasn't developed against without fabricating answers or stalling on a bad input. The Validator + bounded Reviser pass is what separates this from a single-shot draft.
+
+## Architecture
+
+```
+RFP text ─▶ Parser ─▶ Retriever ─▶ Drafter ─▶ Validator ─┐
+                                       ▲                 │
+                                       └── Reviser ◀─────┘
+                                             (≤1 pass)
+```
+
+Model assignment:
+
+| Agent | Model | Why |
+|---|---|---|
+| Parser | `claude-haiku-4-5` | Cheap, structured extraction |
+| Retriever | `claude-haiku-4-5` | Tool-loop over KB; low-stakes |
+| Drafter | `claude-sonnet-4-6` | Judgment + citation discipline |
+| Validator | `claude-sonnet-4-6` | Cross-answer consistency |
+| Reviser | `claude-sonnet-4-6` | Re-draft against critique |
+
+Haiku on Parser + Retriever cuts ~4× off the chatty stages without giving up draft quality.
+
+## Two ways to use it
+
+- **Browser** (`helios_agent.html`): open in Chrome or Safari, paste your Anthropic API key, paste an RFP (or load a baked-in sample), hit **Run**. The dashboard streams per-question cards (pending → retrieving → drafting → validating → revised → final) and a live trace pane logs every agent turn. Export JSON when done.
+- **Notebook** (`Agent_Engineering_Challenge.ipynb`): runs the same pipeline in Python. Use this to inspect prompts, extend the knowledge base, run the eval harness, or regenerate `helios_agent.html` from the export cell.
+
+## Failure-mode coverage
+
+| Failure mode | What the agent does |
+|---|---|
+| Malformed RFP | Parser falls back to blank-line chunking and marks `parse_quality: low`; run continues. |
+| KB miss | Retriever sets `kb_gap: true`; Drafter answers narratively about the gap with `confidence: low` and `flag: "kb-gap"`. Never fabricates numbers. |
+| Anthropic 4xx/5xx | That stage's card flips red; other questions continue in parallel. One bad question never blocks the run. |
+| Bad JSON from any agent | 3-tier extract: `JSON.parse` → regex `\{[\s\S]*\}` → raw-response capture with `parse_error: true`. |
+| Validator contradiction | 1 revision pass; if still unresolved, ship with `flags: ["unresolved-contradiction"]` rather than spin. |
+| Missing/bad API key | Fail fast at **Run** click with inline error. No half-started dashboard state. |
 
 ## What's in this folder
 
 | File | What it is |
-|------|-----------|
-| `Agent_Engineering_Challenge.ipynb` | The main hackathon notebook — start here |
+|---|---|
+| `helios_agent.html` | Self-contained browser UI. KB, prompts, samples, brand tokens all baked in. |
+| `Agent_Engineering_Challenge.ipynb` | Hackathon notebook — agent definitions, synthetic RFPs, eval harness, HTML export cell. |
+| `README.md` | This file. |
+
+## What to show off
+
+- **Live trace pane** in `helios_agent.html` — every agent turn timestamped with role, target question, outcome, latency.
+- **Validator catching a planted contradiction** on the adversarial synthetic RFP (notebook Part 7, RFP `e`) — watch a Q get flagged and revised in one pass.
+- **`kb_gap` handling** on the edge-case RFP — Drafter writes a narrative "we don't have this on file" answer with `confidence: low` instead of inventing a number.
 
 ---
 
