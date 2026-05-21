@@ -27,6 +27,42 @@
         </div>
       </div>
 
+      <div v-if="submittedOrders.length" class="card submitted-orders-card">
+        <div class="card-header">
+          <h3 class="card-title">{{ t('orders.submittedOrders') }} ({{ submittedOrders.length }})</h3>
+        </div>
+        <div class="table-container">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>{{ t('orders.table.orderNumber') }}</th>
+                <th>{{ t('orders.table.customer') }}</th>
+                <th>{{ t('orders.table.items') }}</th>
+                <th>{{ t('orders.table.status') }}</th>
+                <th>{{ t('orders.table.orderDate') }}</th>
+                <th>{{ t('orders.deliveryLeadTime') }}</th>
+                <th>{{ t('orders.table.totalValue') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="order in submittedOrders" :key="order.id">
+                <td><strong>{{ order.order_number }}</strong></td>
+                <td>{{ translateCustomerName(order.customer) }}</td>
+                <td>{{ t('orders.itemsCount', { count: order.items.length }) }}</td>
+                <td>
+                  <span :class="['badge', getOrderStatusClass(order.status)]">
+                    {{ order.status }}
+                  </span>
+                </td>
+                <td>{{ formatDate(order.order_date) }}</td>
+                <td>{{ getDeliveryLeadTime(order) !== null ? `${getDeliveryLeadTime(order)} ${t('orders.days')}` : '-' }}</td>
+                <td><strong>{{ currencySymbol }}{{ order.total_value.toLocaleString() }}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">{{ t('orders.allOrders') }} ({{ orders.length }})</h3>
@@ -138,10 +174,23 @@ export default {
         'Delivered': 'success',
         'Shipped': 'info',
         'Processing': 'warning',
+        'Submitted': 'warning',
         'Backordered': 'danger'
       }
       return statusMap[status] || 'info'
     }
+
+    const getDeliveryLeadTime = (order) => {
+      if (!order.order_date || !order.expected_delivery) return null
+      const orderDate = new Date(order.order_date)
+      const expected = new Date(order.expected_delivery)
+      const leadTime = Math.round((expected - orderDate) / (1000 * 60 * 60 * 24))
+      return leadTime >= 0 ? leadTime : null
+    }
+
+    const submittedOrders = computed(() => {
+      return orders.value.filter(order => order.status === 'Submitted')
+    })
 
     const formatDate = (dateString) => {
       const { currentLocale } = useI18n()
@@ -160,8 +209,10 @@ export default {
       loading,
       error,
       orders,
+      submittedOrders,
       getOrdersByStatus,
       getOrderStatusClass,
+      getDeliveryLeadTime,
       formatDate,
       currencySymbol,
       translateProductName,
