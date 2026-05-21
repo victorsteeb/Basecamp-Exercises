@@ -204,6 +204,7 @@ export default {
     shipped: 'Shipped',
     processing: 'Processing',
     backordered: 'Backordered',
+    restocking: 'Restocking',
     inStock: 'In Stock',
     lowStock: 'Low Stock',
     adequate: 'Adequate'

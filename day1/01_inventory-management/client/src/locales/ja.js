@@ -204,6 +204,7 @@ export default {
     shipped: '出荷済み',
     processing: '処理中',
     backordered: 'バックオーダー',
+    restocking: '補充注文',
     inStock: '在庫あり',
     lowStock: '在庫僅少',
     adequate: '適量'

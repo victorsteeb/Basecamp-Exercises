@@ -138,7 +138,8 @@ export default {
         'Delivered': 'success',
         'Shipped': 'info',
         'Processing': 'warning',
-        'Backordered': 'danger'
+        'Backordered': 'danger',
+        'Restocking': 'stable'
       }
       return statusMap[status] || 'info'
     }
