@@ -23,9 +23,10 @@ git clone https://github.com/victorsteeb/Basecamp-Exercises.git
 ### Day 1
 | Folder | Session | Type |
 |--------|---------|------|
-| `day1/01_developer-platform` | Developer Platform | Build-Along |
-| `day1/02_prompt-rescue` | Prompt Rescue | Build-Along |
-| `day1/03_diagnosing-ai-problems` | Diagnosing AI Problems | Session materials |
+| `day1/01_claude-code-workshop` | Claude Code Workshop | Offline guide |
+| `day1/02_developer-platform` | Developer Platform | Build-Along |
+| `day1/03_prompt-rescue` | Prompt Rescue | Build-Along |
+| `day1/04_diagnosing-ai-problems` | Diagnosing AI Problems | Session materials |
 
 ### Day 2
 | Folder | Session | Type |
