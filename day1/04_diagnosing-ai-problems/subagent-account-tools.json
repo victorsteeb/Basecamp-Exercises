@@ -49,7 +49,7 @@
     },
     {
       "name": "get_workspace_account_summary",
-      "description": "Workspace summary. TODO: merge with get_customer_details?",
+      "description": "Workspace summary: seats used/limit, admins, SSO status, created date.",
       "input_schema": {
         "type": "object",
         "properties": {

@@ -80,6 +80,19 @@
         },
         "required": ["customer_id"]
       }
+    },
+    {
+      "name": "change_plan",
+      "description": "Changes a customer's subscription plan. Takes effect immediately with proration.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "customer_id": {"type": "string"},
+          "new_plan": {"type": "string", "enum": ["starter", "growth", "scale", "enterprise"]},
+          "reason": {"type": "string"}
+        },
+        "required": ["customer_id", "new_plan", "reason"]
+      }
     }
   ]
 }

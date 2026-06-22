@@ -6,7 +6,7 @@ The ticket ID will be in the first user message. You'll need to look up the tick
 
 - get_ticket: pull the full ticket record
 - lookup_customer_by_email: find the customer account from submitter email
-- read_error_logs: last 24h of errors for a customer, filterable by endpoint or status code
+- read_error_logs: errors for a customer, filterable by endpoint or status code. Defaults to last 24h — pass since_hours to look back further (e.g. since_hours=72 for 3 days)
 - check_webhook_deliveries: delivery log, retry status, last successful/failed
 - test_api_key: validate a key is active and check its scopes
 - inspect_integration_config: their SDK version, configured endpoints, retry settings
