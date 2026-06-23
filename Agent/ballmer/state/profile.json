@@ -1,0 +1,7 @@
+{
+  "_comment": "FAKE hardcoded profile for the demo. TODO: replace with interactive intake (see ballmer/stubs.py).",
+  "height_in": 73,
+  "weight_lb": 220,
+  "age": 39,
+  "sex": "male"
+}

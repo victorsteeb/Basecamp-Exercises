@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ballmer — live BAC dashboard</title>
+<style>
+  :root{
+    --bg:#0f1419; --panel:#1a2129; --ink:#e6edf3; --muted:#8b98a5; --line:#2b3640;
+    --below:#3fb6e0; --in:#37d67a; --above:#f5a623; --ceiling:#ef4444; --accent:#c9a227;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:14px/1.45 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1000px;margin:0 auto;padding:18px}
+  h1{font-size:20px;margin:0 0 2px} .sub{color:var(--muted);font-size:12px;margin-bottom:12px}
+  .warn{background:#3a1d1d;border:1px solid #5a2a2a;color:#ffd5d5;padding:8px 12px;
+        border-radius:8px;font-size:12px;margin-bottom:14px}
+  .grid{display:grid;grid-template-columns:300px 1fr;gap:14px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .pill{display:inline-block;padding:4px 12px;border-radius:999px;font-weight:700;
+        letter-spacing:.04em;font-size:13px}
+  .bac{font-size:52px;font-weight:800;line-height:1;margin:10px 0 2px;font-variant-numeric:tabular-nums}
+  .bac small{font-size:18px;color:var(--muted);font-weight:600}
+  .clock{color:var(--muted);font-size:13px}
+  .kv{display:flex;justify-content:space-between;border-top:1px solid var(--line);
+      padding:6px 0;font-size:12px} .kv span:first-child{color:var(--muted)}
+  .burn{margin-top:10px;padding:10px;border-radius:8px;background:#15202b;border:1px solid var(--line)}
+  .burn .big{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+  .gauge{height:22px;border-radius:6px;position:relative;background:#0c1116;
+         border:1px solid var(--line);margin-top:8px;overflow:hidden}
+  .gauge .band{position:absolute;top:0;bottom:0;background:rgba(55,214,122,.25);
+               border-left:1px solid var(--in);border-right:1px solid var(--in)}
+  .gauge .ceil{position:absolute;top:0;bottom:0;width:2px;background:var(--ceiling)}
+  .gauge .you{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--ink)}
+  canvas{width:100%;height:360px;display:block}
+  .msg{margin-top:10px;color:var(--ink);font-size:13px;min-height:34px}
+  table{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+  th,td{text-align:left;padding:4px 6px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+  th{color:var(--muted);font-weight:600} .tag{font-weight:700}
+  .foot{color:var(--muted);font-size:11px;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🍸 Ballmer — live BAC dashboard</h1>
+  <div class="sub" id="sub">connecting…</div>
+  <div class="warn">⚠ The “Ballmer Peak” (0.129–0.138% BAC) is a joke from XKCD #323. It is far above
+    every legal driving limit and is <b>not</b> health or safety advice. Do not drive. Modeling demo only.</div>
+
+  <div class="grid">
+    <div class="panel">
+      <span class="pill" id="pill">—</span>
+      <div class="bac"><span id="bacval">0.000</span><small>% BAC</small></div>
+      <div class="clock" id="clock">—</div>
+
+      <div class="gauge" id="gauge">
+        <div class="band" id="gband"></div><div class="ceil" id="gceil"></div><div class="you" id="gyou"></div>
+      </div>
+
+      <div class="burn">
+        <div style="color:var(--muted);font-size:12px">BURNDOWN — time to leave the range</div>
+        <div class="big" id="burn">—</div>
+        <div id="burneta" style="color:var(--muted);font-size:12px"></div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="kv"><span>r-factor</span><span id="m_r">—</span></div>
+        <div class="kv"><span>β (elim)</span><span id="m_b">—</span></div>
+        <div class="kv"><span>k_a (absorp)</span><span id="m_k">—</span></div>
+        <div class="kv"><span>profile</span><span id="m_p">—</span></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <canvas id="chart" width="900" height="360"></canvas>
+      <div class="msg" id="msg"></div>
+      <table>
+        <thead><tr><th>time</th><th>BAC%</th><th>status</th><th>action</th><th>burndown</th></tr></thead>
+        <tbody id="log"></tbody>
+      </table>
+      <div class="foot" id="foot"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const COL = {BELOW_WINDOW:"#3fb6e0", IN_WINDOW:"#37d67a", ABOVE_WINDOW:"#f5a623", PAST_CEILING:"#ef4444"};
+let META=null;
+
+async function getJSON(u){ const r=await fetch(u); return r.json(); }
+
+function fmt(x,d=3){ return (x==null)?"—":Number(x).toFixed(d); }
+
+function draw(s){
+  const c=document.getElementById("chart"), ctx=c.getContext("2d");
+  const W=c.width, H=c.height, padL=52, padR=16, padT=14, padB=28;
+  ctx.clearRect(0,0,W,H);
+  const dur = META ? META.duration_hours : 6;
+  const yTop = Math.max(s.ceiling*1.15, s.band[1]*1.25, (s.current_bac||0)*1.2, 0.05);
+  const X = t => padL + (t/dur)*(W-padL-padR);
+  const Y = v => padT + (1 - v/yTop)*(H-padT-padB);
+
+  // target band
+  ctx.fillStyle="rgba(55,214,122,.14)";
+  ctx.fillRect(padL, Y(s.band[1]), W-padL-padR, Y(s.band[0])-Y(s.band[1]));
+  ctx.strokeStyle="rgba(55,214,122,.5)"; ctx.lineWidth=1;
+  [s.band[0],s.band[1]].forEach(v=>{ctx.beginPath();ctx.moveTo(padL,Y(v));ctx.lineTo(W-padR,Y(v));ctx.stroke();});
+
+  // ceiling line
+  ctx.strokeStyle=COL.PAST_CEILING; ctx.setLineDash([6,4]); ctx.beginPath();
+  ctx.moveTo(padL,Y(s.ceiling)); ctx.lineTo(W-padR,Y(s.ceiling)); ctx.stroke(); ctx.setLineDash([]);
+
+  // axes labels (y)
+  ctx.fillStyle="#8b98a5"; ctx.font="11px sans-serif"; ctx.textAlign="right";
+  for(let k=0;k<=5;k++){ const v=yTop*k/5; ctx.fillText(v.toFixed(3), padL-6, Y(v)+3); }
+  // x ticks
+  ctx.textAlign="center";
+  for(let h=0;h<=Math.ceil(dur);h++){ ctx.fillText(h+"h", X(h), H-10); }
+
+  // realized curve
+  if(s.curve && s.curve.t.length){
+    ctx.strokeStyle="#dfe7ee"; ctx.lineWidth=2.2; ctx.beginPath();
+    s.curve.t.forEach((t,i)=>{ const x=X(t),y=Y(s.curve.bac[i]); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+    ctx.stroke();
+  }
+  // burndown projection (dashed)
+  if(s.burndown_line && s.burndown_line.t.length){
+    ctx.strokeStyle="#f5a623"; ctx.lineWidth=2; ctx.setLineDash([5,4]); ctx.beginPath();
+    s.burndown_line.t.forEach((t,i)=>{ const x=X(t),y=Y(s.burndown_line.bac[i]); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+  // drink markers
+  (s.events||[]).forEach(e=>{
+    const x=X(e.t);
+    ctx.strokeStyle="rgba(201,162,39,.5)"; ctx.beginPath(); ctx.moveTo(x,padT); ctx.lineTo(x,H-padB); ctx.stroke();
+    ctx.fillStyle="#c9a227"; ctx.save(); ctx.translate(x+3,padT+4); ctx.textAlign="left";
+    ctx.font="10px sans-serif"; ctx.fillText(e.label, 0, 0); ctx.restore();
+  });
+  // "you are here" dot
+  if(s.current_bac!=null){
+    ctx.fillStyle=COL[s.status]||"#fff";
+    ctx.beginPath(); ctx.arc(X(s.now_hours), Y(s.current_bac), 5, 0, 7); ctx.fill();
+  }
+}
+
+function render(s){
+  const col=COL[s.status]||"#888";
+  const pill=document.getElementById("pill");
+  pill.textContent=s.status_label; pill.style.background=col;
+  pill.style.color = (s.status==="ABOVE_WINDOW")?"#1a1a1a":"#06140c";
+  document.getElementById("bacval").textContent=fmt(s.current_bac,3);
+  document.getElementById("clock").textContent=s.clock+"  ·  tick "+(s.cursor+1)+"/"+s.n_ticks;
+
+  // burndown
+  document.getElementById("burn").textContent =
+    (s.burndown_hours==null) ? "below band" : (s.burndown_hours.toFixed(2)+" h");
+  document.getElementById("burneta").textContent =
+    (s.burndown_eta==null) ? "nothing to burn down yet" : ("expected to exit ~"+s.burndown_eta+" (no more drinks)");
+
+  // gauge
+  const gTop=Math.max(s.ceiling*1.2, s.band[1]*1.3, 0.05);
+  const pct=v=>Math.max(0,Math.min(100, v/gTop*100));
+  const gb=document.getElementById("gband");
+  gb.style.left=pct(s.band[0])+"%"; gb.style.width=(pct(s.band[1])-pct(s.band[0]))+"%";
+  document.getElementById("gceil").style.left=pct(s.ceiling)+"%";
+  document.getElementById("gyou").style.left=pct(s.current_bac)+"%";
+
+  document.getElementById("msg").textContent=s.message||"";
+
+  // log
+  const tb=document.getElementById("log"); tb.innerHTML="";
+  (s.ticks||[]).slice().reverse().forEach(t=>{
+    const tr=document.createElement("tr");
+    const c=COL[Object.keys(COL).find(k=>k.startsWith(t.status.split(" ")[0]))]||"#ccc";
+    const act=t.action+(t.drink?(": "+t.drink):"");
+    tr.innerHTML=`<td>${t.clock}</td><td>${t.bac.toFixed(3)}</td>
+      <td class="tag" style="color:${c}">${t.status}</td><td>${act}</td>
+      <td>${t.burndown==null?"—":t.burndown.toFixed(2)+"h"}</td>`;
+    tb.appendChild(tr);
+  });
+
+  draw(s);
+}
+
+async function init(){
+  META=await getJSON("/api/meta");
+  document.getElementById("sub").textContent =
+    "always-on agent · ticking a simulated bar night · session start "+
+    new Date(META.session_start).toLocaleTimeString();
+  document.getElementById("m_r").textContent=META.r;
+  document.getElementById("m_b").textContent=META.beta+" %/hr";
+  document.getElementById("m_k").textContent=META.k_a+" /hr";
+  document.getElementById("m_p").textContent=
+    META.profile.height_in+"in / "+META.profile.weight_lb+"lb / "+META.profile.age+" / "+META.profile.sex;
+  document.getElementById("foot").textContent=
+    "Engine: Widmark + Watson TBW + first-order absorption. Predictions are approximate; see reference/model-assumptions.md.";
+  poll(); setInterval(poll, 1000);
+}
+async function poll(){ try{ render(await getJSON("/api/state")); }catch(e){} }
+init();
+</script>
+</body>
+</html>

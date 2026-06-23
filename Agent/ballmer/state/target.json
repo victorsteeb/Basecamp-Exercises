@@ -1,0 +1,8 @@
+{
+  "_comment": "Target band + safety ceiling. The band is the XKCD #323 joke. The ceiling is an engineering choice, NOT a medical threshold. All are %BAC (g/100mL). See reference/safety-policy.md.",
+  "target_low": 0.129,
+  "target_high": 0.138,
+  "safety_ceiling": 0.15,
+  "tick_interval_min": 20,
+  "session_duration_hours": 5.0
+}

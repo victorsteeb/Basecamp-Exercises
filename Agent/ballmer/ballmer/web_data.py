@@ -1,0 +1,120 @@
+"""Turn a deterministic SessionRecord into per-tick JSON frames for the web UI.
+
+Pure data transform — no I/O, no server. The web server (serve_dashboard.py)
+plays these frames back on a wall-clock cadence so the dashboard updates "live".
+
+Each frame is the complete state to render at one tick:
+  * current BAC, status, the recommendation message + action
+  * the REALIZED BAC curve up to "now" (recomputed from drinks consumed so far,
+    so we never reveal the future)
+  * the BURNDOWN projection: a dashed decline line from now until BAC crosses the
+    bottom of the band, plus the ETA clock time
+  * drink-event markers consumed so far
+  * the running tick log
+"""
+
+from __future__ import annotations
+
+from datetime import timedelta
+
+from .agent import SessionRecord, time_to_leave_window
+from .bac_model import bac_curve
+from .recommend import IN, _na_drink  # noqa: F401  (_na_drink kept for parity)
+
+_STATUS_LABEL = {
+    "BELOW_WINDOW": "BELOW BAND",
+    "IN_WINDOW": "IN RANGE",
+    "ABOVE_WINDOW": "ABOVE BAND",
+    "PAST_CEILING": "PAST CEILING",
+}
+
+
+def _clock(session: SessionRecord, now_hours: float) -> str:
+    return (session.state.session_start + timedelta(hours=now_hours)
+            ).strftime("%I:%M %p").lstrip("0")
+
+
+def build_frames(session: SessionRecord) -> list[dict]:
+    """One frame per tick. Frame N shows the world as of tick N (no future leak)."""
+    st = session.state
+    low, high = st.window
+    beta = st.body.beta
+    frames: list[dict] = []
+
+    for i, tk in enumerate(session.ticks):
+        now = tk.now_hours
+
+        # Realized curve from drinks consumed AT OR BEFORE now (no future leak).
+        events_so_far = [e for e in session.final_events if e.t_hours <= now + 1e-9]
+        if now > 0:
+            times, bac = bac_curve(events_so_far, st.body, t_end=now, t_start=0.0)
+        else:
+            times, bac = [0.0], [0.0]
+
+        # Burndown projection: decline at beta from (now, current) to crossing low.
+        bd_hours = tk.burndown_hours
+        bd_t, bd_bac = [], []
+        bd_eta = None
+        if bd_hours is not None and bd_hours > 0:
+            steps = 24
+            for s in range(steps + 1):
+                tt = now + bd_hours * s / steps
+                bd_t.append(round(tt, 4))
+                bd_bac.append(round(max(0.0, tk.current_bac - beta * (tt - now)), 5))
+            bd_eta = _clock(session, now + bd_hours)
+
+        events_marks = [
+            {"t": round(e.t_hours, 3), "label": e.label, "grams": round(e.grams, 1)}
+            for e in events_so_far
+        ]
+
+        ticklog = [
+            {
+                "clock": session.ticks[j].clock,
+                "bac": round(session.ticks[j].current_bac, 3),
+                "status": _STATUS_LABEL.get(session.ticks[j].status, session.ticks[j].status),
+                "action": session.ticks[j].action,
+                "drink": session.ticks[j].drink_name,
+                "burndown": (round(session.ticks[j].burndown_hours, 2)
+                             if session.ticks[j].burndown_hours is not None else None),
+            }
+            for j in range(i + 1)
+        ]
+
+        frames.append({
+            "cursor": i,
+            "n_ticks": len(session.ticks),
+            "clock": tk.clock,
+            "now_hours": round(now, 4),
+            "band": [low, high],
+            "ceiling": st.ceiling,
+            "current_bac": round(tk.current_bac, 5),
+            "status": tk.status,
+            "status_label": _STATUS_LABEL.get(tk.status, tk.status),
+            "in_range": tk.status == IN,
+            "action": tk.action,
+            "drink": tk.drink_name,
+            "message": tk.recommendation.message,
+            "burndown_hours": round(bd_hours, 3) if bd_hours is not None else None,
+            "burndown_eta": bd_eta,
+            "curve": {"t": [round(x, 4) for x in times], "bac": [round(x, 5) for x in bac]},
+            "burndown_line": {"t": bd_t, "bac": bd_bac},
+            "events": events_marks,
+            "ticks": ticklog,
+        })
+    return frames
+
+
+def session_meta(session: SessionRecord) -> dict:
+    """Static metadata shown in the dashboard header."""
+    st = session.state
+    return {
+        "session_start": st.session_start.isoformat(),
+        "profile": st.profile,
+        "r": round(st.body.r, 4),
+        "beta": st.body.beta,
+        "k_a": st.body.k_a_base,
+        "band": list(st.window),
+        "ceiling": st.ceiling,
+        "duration_hours": st.session_duration_hours,
+    }

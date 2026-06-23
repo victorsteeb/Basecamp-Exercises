@@ -1,0 +1,9 @@
+# Python cache / build
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Generated always-on session transcripts (the agent's runtime output)
+state/log/*
+!state/log/.gitkeep

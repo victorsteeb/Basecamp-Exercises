@@ -1,0 +1,8 @@
+{
+  "_comment": "The live bar tab — the always-on agent's analog of issues/*.json: the mutable state the loop reads each tick. FAKE seed data for the demo: 2 drinks already consumed. Drink names must exist in drink-library.json. food_state is per-drink (empty|light|full).",
+  "session_start": "2026-06-23T19:00:00",
+  "consumed": [
+    {"name": "Negroni", "time": "2026-06-23T19:15:00", "food_state": "light"},
+    {"name": "Lager (12 oz)", "time": "2026-06-23T20:00:00", "food_state": "light"}
+  ]
+}
