@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campaign Sentiment Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --border: #2a2d3e;
+      --text: #e2e8f0;
+      --muted: #8892a4;
+      --pos: #34d399;
+      --neu: #60a5fa;
+      --neg: #f87171;
+      --warn: #fbbf24;
+      --radius: 10px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    header h1 { font-size: 1.3rem; font-weight: 600; }
+
+    /* live indicator */
+    #live-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 10px;
+      transition: color 0.3s, border-color 0.3s;
+    }
+    #live-pill.live { color: var(--pos); border-color: var(--pos); }
+    #live-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    #live-pill.live #live-dot { animation: pulse 1.4s ease-in-out infinite; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1);   }
+      50%       { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    #last-updated { font-size: 0.75rem; color: var(--muted); margin-left: auto; }
+
+    /* ── processing ticker ── */
+    #ticker {
+      height: 28px;
+      margin-bottom: 18px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+    }
+    #ticker-text {
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    #ticker-text.show { opacity: 1; transform: translateY(0); }
+    #ticker-bar {
+      height: 3px;
+      width: 0;
+      background: var(--neu);
+      border-radius: 2px;
+      transition: width 1.2s ease, background 0.4s;
+      flex-shrink: 0;
+    }
+
+    /* ── stat cards ── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      transition: border-color 0.4s;
+    }
+    .card.flash { border-color: var(--neu); }
+    .card-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+    .card-value { font-size: 2rem; font-weight: 700; margin-top: 6px; line-height: 1; transition: color 0.4s; }
+    .card-sub   { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+    .pos { color: var(--pos); }
+    .neg { color: var(--neg); }
+    .neu { color: var(--neu); }
+
+    /* ── charts row ── */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 800px) { .charts-row { grid-template-columns: 1fr; } }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .panel-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    /* ── bottom row ── */
+    .bottom-row {
+      display: grid;
+      grid-template-columns: 1fr 390px;
+      gap: 16px;
+    }
+    @media (max-width: 900px) { .bottom-row { grid-template-columns: 1fr; } }
+
+    /* ── email feed ── */
+    .email-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      max-height: 440px;
+      overflow-y: auto;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes flashBg {
+      0%   { background: rgba(96,165,250,0.18); }
+      100% { background: transparent; }
+    }
+
+    .email-item {
+      display: grid;
+      grid-template-columns: 6px 1fr auto;
+      gap: 10px;
+      align-items: start;
+      padding: 10px 12px;
+      background: transparent;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      font-size: 0.82rem;
+    }
+    .email-item.arriving {
+      animation: slideDown 0.35s ease forwards, flashBg 1.2s ease forwards;
+    }
+    .email-bar { border-radius: 3px; width: 6px; min-height: 38px; }
+    .email-bar.positive { background: var(--pos); }
+    .email-bar.neutral  { background: var(--neu); }
+    .email-bar.negative { background: var(--neg); }
+
+    .email-subject { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 340px; }
+    .email-meta    { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+    .email-summary { font-size: 0.74rem; color: var(--muted); margin-top: 4px; font-style: italic; }
+    .email-score   { font-size: 0.8rem; font-weight: 700; white-space: nowrap; padding-top: 2px; }
+
+    .urgency-badge {
+      display: inline-block;
+      font-size: 0.64rem;
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-left: 5px;
+      vertical-align: middle;
+    }
+    .urgency-badge.high   { background: #7f1d1d; color: #fca5a5; }
+    .urgency-badge.medium { background: #78350f; color: #fcd34d; }
+    .urgency-badge.low    { display: none; }
+
+    /* ── alerts panel ── */
+    .alert-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 440px;
+      overflow-y: auto;
+    }
+
+    @keyframes alertIn {
+      from { opacity: 0; transform: translateX(12px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .alert-item {
+      padding: 12px 14px;
+      background: var(--bg);
+      border-radius: 6px;
+      border-left: 3px solid var(--warn);
+      font-size: 0.8rem;
+    }
+    .alert-item.arriving { animation: alertIn 0.4s ease forwards; }
+    .alert-type { font-weight: 600; color: var(--warn); font-size: 0.7rem; text-transform: uppercase; }
+    .alert-msg  { color: var(--text); margin-top: 4px; line-height: 1.45; }
+    .alert-ts   { color: var(--muted); font-size: 0.7rem; margin-top: 5px; }
+
+    .no-data { color: var(--muted); font-size: 0.82rem; padding: 12px 0; }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div id="live-pill">
+    <div id="live-dot"></div>
+    <span id="live-label">Connecting…</span>
+  </div>
+  <h1>Campaign Sentiment Dashboard</h1>
+  <span id="last-updated"></span>
+</header>
+
+<!-- processing ticker -->
+<div id="ticker">
+  <div id="ticker-bar"></div>
+  <div id="ticker-text"></div>
+</div>
+
+<!-- stat cards -->
+<div class="cards">
+  <div class="card" id="card-total">
+    <div class="card-label">Emails Analysed</div>
+    <div class="card-value" id="stat-total">—</div>
+    <div class="card-sub">cumulative</div>
+  </div>
+  <div class="card" id="card-score">
+    <div class="card-label">Avg Sentiment Score</div>
+    <div class="card-value" id="stat-score">—</div>
+    <div class="card-sub">–1.0 (neg) to +1.0 (pos)</div>
+  </div>
+  <div class="card" id="card-pos">
+    <div class="card-label">Positive</div>
+    <div class="card-value pos" id="stat-pos">—</div>
+    <div class="card-sub" id="stat-pos-n"></div>
+  </div>
+  <div class="card" id="card-neu">
+    <div class="card-label">Neutral</div>
+    <div class="card-value neu" id="stat-neu">—</div>
+    <div class="card-sub" id="stat-neu-n"></div>
+  </div>
+  <div class="card" id="card-neg">
+    <div class="card-label">Negative</div>
+    <div class="card-value neg" id="stat-neg">—</div>
+    <div class="card-sub" id="stat-neg-n"></div>
+  </div>
+</div>
+
+<!-- charts row -->
+<div class="charts-row">
+  <div class="panel">
+    <div class="panel-title">Sentiment Score — daily average</div>
+    <div style="position:relative;height:220px">
+      <canvas id="lineChart"></canvas>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-title">Overall Distribution</div>
+    <div style="position:relative;height:220px">
+      <canvas id="donutChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- bottom row -->
+<div class="bottom-row">
+  <div class="panel">
+    <div class="panel-title">Live Email Feed</div>
+    <div class="email-list" id="email-feed">
+      <span class="no-data">Waiting for data…</span>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-title">Alerts Fired</div>
+    <div class="alert-list" id="alert-feed">
+      <span class="no-data">No alerts yet.</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Chart setup ───────────────────────────────────────────────────────────────
+Chart.defaults.color = '#8892a4';
+Chart.defaults.borderColor = '#2a2d3e';
+Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+
+const lineChart = new Chart(document.getElementById('lineChart'), {
+  type: 'line',
+  data: { labels: [], datasets: [{
+    label: 'Avg Score',
+    data: [],
+    borderColor: '#60a5fa',
+    backgroundColor: 'rgba(96,165,250,0.08)',
+    borderWidth: 2,
+    tension: 0.35,
+    fill: true,
+    pointRadius: 4,
+    pointBackgroundColor: '#60a5fa',
+  }]},
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { min: -1, max: 1, ticks: { stepSize: 0.5 }, grid: { color: '#2a2d3e' } },
+      x: { grid: { color: '#2a2d3e' } },
+    },
+    animation: { duration: 400 },
+  },
+});
+
+const donutChart = new Chart(document.getElementById('donutChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Positive', 'Neutral', 'Negative'],
+    datasets: [{ data: [0, 0, 0], backgroundColor: ['#34d399', '#60a5fa', '#f87171'], borderWidth: 0, hoverOffset: 6 }],
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '68%',
+    plugins: { legend: { position: 'bottom', labels: { padding: 16, boxWidth: 12 } } },
+    animation: { duration: 400 },
+  },
+});
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function esc(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function fmt(n) { return (n >= 0 ? '+' : '') + Number(n).toFixed(2); }
+function scoreClass(s) { return s >= 0.1 ? 'pos' : s <= -0.1 ? 'neg' : 'neu'; }
+
+function flashCard(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('flash');
+  setTimeout(() => el.classList.remove('flash'), 800);
+}
+
+// ── Ticker (shows subject of email being processed) ───────────────────────────
+let tickerTimer = null;
+function showTicker(subject, sentiment) {
+  const text = document.getElementById('ticker-text');
+  const bar  = document.getElementById('ticker-bar');
+  const colors = { positive: '#34d399', neutral: '#60a5fa', negative: '#f87171' };
+
+  text.classList.remove('show');
+  clearTimeout(tickerTimer);
+
+  setTimeout(() => {
+    text.textContent = subject;
+    bar.style.width = '160px';
+    bar.style.background = colors[sentiment] || '#60a5fa';
+    text.classList.add('show');
+
+    tickerTimer = setTimeout(() => {
+      text.classList.remove('show');
+      bar.style.width = '0';
+    }, 3500);
+  }, 80);
+}
+
+// ── Stats update ─────────────────────────────────────────────────────────────
+function updateStats(s, ts) {
+  if (!s || !s.total) return;
+
+  document.getElementById('stat-total').textContent = s.total;
+
+  const scoreEl = document.getElementById('stat-score');
+  scoreEl.textContent = fmt(s.avg_score);
+  scoreEl.className = 'card-value ' + scoreClass(s.avg_score);
+
+  document.getElementById('stat-pos').textContent = s.positive_pct + '%';
+  document.getElementById('stat-neu').textContent = s.neutral_pct  + '%';
+  document.getElementById('stat-neg').textContent = s.negative_pct + '%';
+  document.getElementById('stat-pos-n').textContent = s.positive + ' emails';
+  document.getElementById('stat-neu-n').textContent = s.neutral  + ' emails';
+  document.getElementById('stat-neg-n').textContent = s.negative + ' emails';
+
+  ['card-total', 'card-score', 'card-pos', 'card-neu', 'card-neg'].forEach(flashCard);
+
+  if (ts && ts.length) {
+    lineChart.data.labels = ts.map(d => d.day.slice(5));
+    lineChart.data.datasets[0].data = ts.map(d => d.avg_score);
+    lineChart.update();
+  }
+  donutChart.data.datasets[0].data = [s.positive, s.neutral, s.negative];
+  donutChart.update();
+}
+
+// ── Email feed ────────────────────────────────────────────────────────────────
+const MAX_FEED = 30;
+
+function emailHTML(e, animate) {
+  const div = document.createElement('div');
+  div.className = 'email-item' + (animate ? ' arriving' : '');
+  div.innerHTML = `
+    <div class="email-bar ${esc(e.sentiment)}"></div>
+    <div>
+      <div class="email-subject">${esc(e.subject)}</div>
+      <div class="email-meta">${esc(e.sender || e.from)} &middot; ${(e.email_ts || e.timestamp || '').slice(0,10)}
+        <span class="urgency-badge ${esc(e.urgency)}">${esc(e.urgency)}</span>
+      </div>
+      <div class="email-summary">${esc(e.summary)}</div>
+    </div>
+    <div class="email-score ${scoreClass(e.score)}">${fmt(e.score)}</div>
+  `;
+  return div;
+}
+
+function prependEmail(e, animate) {
+  const feed = document.getElementById('email-feed');
+  const noData = feed.querySelector('.no-data');
+  if (noData) noData.remove();
+
+  feed.prepend(emailHTML(e, animate));
+
+  while (feed.children.length > MAX_FEED) feed.lastChild.remove();
+
+  if (animate) {
+    showTicker(e.subject, e.sentiment);
+    document.getElementById('last-updated').textContent =
+      'Last email: ' + new Date().toLocaleTimeString();
+  }
+}
+
+function populateEmailFeed(emails) {
+  const feed = document.getElementById('email-feed');
+  feed.innerHTML = '';
+  if (!emails || !emails.length) {
+    feed.innerHTML = '<span class="no-data">Waiting for data…</span>';
+    return;
+  }
+  emails.forEach(e => feed.appendChild(emailHTML(e, false)));
+}
+
+// ── Alert feed ────────────────────────────────────────────────────────────────
+function alertHTML(a, animate) {
+  const div = document.createElement('div');
+  div.className = 'alert-item' + (animate ? ' arriving' : '');
+  div.innerHTML = `
+    <div class="alert-type">${esc(a.alert_type)}</div>
+    <div class="alert-msg">${esc(a.message)}</div>
+    <div class="alert-ts">${(a.fired_at || '').replace('T',' ').slice(0,19)} UTC &middot; ${esc(a.sent_to)}</div>
+  `;
+  return div;
+}
+
+function prependAlert(a) {
+  const feed = document.getElementById('alert-feed');
+  const noData = feed.querySelector('.no-data');
+  if (noData) noData.remove();
+  feed.prepend(alertHTML(a, true));
+}
+
+function populateAlertFeed(alerts) {
+  const feed = document.getElementById('alert-feed');
+  feed.innerHTML = '';
+  if (!alerts || !alerts.length) {
+    feed.innerHTML = '<span class="no-data">No alerts yet.</span>';
+    return;
+  }
+  alerts.forEach(a => feed.appendChild(alertHTML(a, false)));
+}
+
+// ── SSE connection ────────────────────────────────────────────────────────────
+function connect() {
+  const pill  = document.getElementById('live-pill');
+  const label = document.getElementById('live-label');
+  label.textContent = 'Connecting…';
+  pill.classList.remove('live');
+
+  const es = new EventSource('/api/stream');
+
+  es.onopen = () => {
+    pill.classList.add('live');
+    label.textContent = 'Live';
+  };
+
+  es.onmessage = (event) => {
+    const msg = JSON.parse(event.data);
+
+    if (msg.type === 'snapshot') {
+      populateEmailFeed(msg.emails);
+      populateAlertFeed(msg.alerts);
+      updateStats(msg.stats, null);
+      // Fetch full timeseries on initial load
+      fetch('/api/timeseries').then(r => r.json()).then(ts => {
+        lineChart.data.labels = ts.map(d => d.day.slice(5));
+        lineChart.data.datasets[0].data = ts.map(d => d.avg_score);
+        lineChart.update();
+      });
+      return;
+    }
+
+    if (msg.type === 'email') {
+      prependEmail(msg.data, true);
+    }
+
+    if (msg.type === 'alert') {
+      prependAlert(msg.data);
+    }
+
+    if (msg.type === 'stats') {
+      updateStats(msg.data, msg.timeseries);
+    }
+  };
+
+  es.onerror = () => {
+    pill.classList.remove('live');
+    label.textContent = 'Reconnecting…';
+    es.close();
+    setTimeout(connect, 3000);
+  };
+}
+
+connect();
+</script>
+</body>
+</html>

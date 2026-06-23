@@ -1,0 +1,362 @@
+[
+  {
+    "id": "tc_001",
+    "from": "alice.morgan@gmail.com",
+    "subject": "Just received my order — absolutely delighted!",
+    "body": "Hi,\n\nI just received my parcel and I honestly couldn't be happier. The product quality is exceptional — better than the photos suggested — and it arrived a full day ahead of schedule. I've already shared the campaign link with my sister and two colleagues. Will definitely be ordering again.\n\nWarm regards,\nAlice",
+    "expected": { "sentiment": "positive", "score_min": 0.7, "score_max": 1.0, "urgency": "low" },
+    "case_type": "clear_positive",
+    "notes": "Unambiguous enthusiastic positive — baseline sanity check"
+  },
+  {
+    "id": "tc_002",
+    "from": "raj.sharma@gmail.com",
+    "subject": "Third order this year and still impressed",
+    "body": "Hello,\n\nI've now ordered three times through your campaigns and the quality has been consistently excellent. This latest purchase is no exception. Packaging was great, delivery was on time, and the product is exactly what was described. Keep it up!\n\nRaj",
+    "expected": { "sentiment": "positive", "score_min": 0.6, "score_max": 1.0, "urgency": "low" },
+    "case_type": "clear_positive",
+    "notes": "Repeat customer satisfaction — should score high positive"
+  },
+  {
+    "id": "tc_003",
+    "from": "emma.johnson@icloud.com",
+    "subject": "Campaign discount — great deal, great product",
+    "body": "Hi there,\n\nI was initially sceptical about the 35% discount but I took the plunge and I'm really glad I did. Product arrived in 3 days, quality is solid, and it does exactly what it says on the tin. Genuinely good value for money.\n\nEmma",
+    "expected": { "sentiment": "positive", "score_min": 0.5, "score_max": 0.9, "urgency": "low" },
+    "case_type": "clear_positive",
+    "notes": "Satisfied but measured — good value, not ecstatic"
+  },
+  {
+    "id": "tc_004",
+    "from": "liam.foster@gmail.com",
+    "subject": "Re: Summer Sale — bought as a gift, huge success",
+    "body": "Hi,\n\nI bought this as a birthday gift during the campaign and my partner absolutely loved it. Great quality, beautiful packaging, and delivered on exactly the right day. You've made both of us very happy customers.\n\nLiam",
+    "expected": { "sentiment": "positive", "score_min": 0.6, "score_max": 1.0, "urgency": "low" },
+    "case_type": "clear_positive",
+    "notes": "Gift purchase — happiness expressed on behalf of two people"
+  },
+  {
+    "id": "tc_005",
+    "from": "priya.nair@outlook.com",
+    "subject": "Ordered for the whole team — everyone's thrilled",
+    "body": "Hello,\n\nI placed a bulk order for our team of eight during the campaign and everyone has been delighted. The consistency of quality across all items was impressive. Several colleagues have already asked me for the link to order for themselves.\n\nPriya",
+    "expected": { "sentiment": "positive", "score_min": 0.65, "score_max": 1.0, "urgency": "low" },
+    "case_type": "clear_positive",
+    "notes": "Team/bulk order — strong advocacy signal"
+  },
+  {
+    "id": "tc_006",
+    "from": "ben.walker@gmail.com",
+    "subject": "Already reordered — best campaign you've done",
+    "body": "Hi,\n\nI placed my second order before I'd even finished the first one. The product is that good. Delivery was fast, the quality rivals things I've paid twice as much for elsewhere. This is the best campaign you've run. Great job.\n\nBen",
+    "expected": { "sentiment": "positive", "score_min": 0.7, "score_max": 1.0, "urgency": "low" },
+    "case_type": "clear_positive",
+    "notes": "Immediate reorder — strongest positive buying behaviour signal"
+  },
+  {
+    "id": "tc_007",
+    "from": "tom.hartley@outlook.com",
+    "subject": "Order status enquiry",
+    "body": "Hi,\n\nI placed order #847291 six days ago and haven't received a shipping confirmation yet. I'm not worried — I just want to make sure everything is on track. Could you let me know the current status?\n\nThanks,\nTom",
+    "expected": { "sentiment": "neutral", "score_min": -0.15, "score_max": 0.2, "urgency": "low" },
+    "case_type": "clear_neutral",
+    "notes": "Polite status check — explicitly says 'not worried', no frustration"
+  },
+  {
+    "id": "tc_008",
+    "from": "sofia.reyes@yahoo.com",
+    "subject": "Return policy for campaign purchases?",
+    "body": "Hello,\n\nI bought two items during the campaign and I'd like to return one as it doesn't quite fit my needs — nothing wrong with the product itself. Could you clarify the return window for campaign orders and the process?\n\nThanks,\nSofia",
+    "expected": { "sentiment": "neutral", "score_min": -0.15, "score_max": 0.2, "urgency": "low" },
+    "case_type": "clear_neutral",
+    "notes": "Return request — product fine, just wrong fit, no negative emotion"
+  },
+  {
+    "id": "tc_009",
+    "from": "victor.lane@gmail.com",
+    "subject": "Delivery estimate for my order?",
+    "body": "Hi,\n\nI placed my order five days ago and was given an estimated delivery of 4–6 days. Could you give me an updated delivery estimate? I need to make sure someone is home to receive it.\n\nVictor",
+    "expected": { "sentiment": "neutral", "score_min": -0.1, "score_max": 0.2, "urgency": "low" },
+    "case_type": "clear_neutral",
+    "notes": "Practical delivery question — no frustration, just logistics"
+  },
+  {
+    "id": "tc_010",
+    "from": "chloe.baker@icloud.com",
+    "subject": "Order arrived — will review once I've tried it",
+    "body": "Hi,\n\nMy order arrived today. Packaging looked fine and everything was in the box. I haven't had a chance to try it properly yet so I'll reserve judgement, but first impressions are okay. I'll send a proper review once I've used it.\n\nChloe",
+    "expected": { "sentiment": "neutral", "score_min": -0.1, "score_max": 0.25, "urgency": "low" },
+    "case_type": "clear_neutral",
+    "notes": "Deliberately non-committal — 'okay', no strong signal either way"
+  },
+  {
+    "id": "tc_011",
+    "from": "kevin.osei@gmail.com",
+    "subject": "Question about product specs before I order",
+    "body": "Hello,\n\nI'm interested in ordering through the campaign but I have a quick question about the product dimensions — the listing doesn't specify. Could you confirm the exact measurements? I want to make sure it fits my space before I commit.\n\nKevin",
+    "expected": { "sentiment": "neutral", "score_min": -0.1, "score_max": 0.2, "urgency": "low" },
+    "case_type": "clear_neutral",
+    "notes": "Pre-purchase information request — interested but uncommitted"
+  },
+  {
+    "id": "tc_012",
+    "from": "anna.petrov@outlook.com",
+    "subject": "Shipping address correction",
+    "body": "Hi,\n\nI just placed order #913044 and realised I entered the wrong postcode. Could you update the delivery address to: 14 Maple Close, Bristol, BS8 2QW? Apologies for the trouble.\n\nAnna",
+    "expected": { "sentiment": "neutral", "score_min": -0.1, "score_max": 0.15, "urgency": "low" },
+    "case_type": "clear_neutral",
+    "notes": "Administrative request — apologetic tone, no emotional content"
+  },
+  {
+    "id": "tc_013",
+    "from": "david.okafor@hotmail.com",
+    "subject": "Product not as described — very disappointed",
+    "body": "Hello,\n\nI received my order and the product looks nothing like the campaign photos. The colour is completely different and the finish feels cheap. I specifically chose this based on the images and description, so I feel misled. I'd like to understand my options.\n\nDavid",
+    "expected": { "sentiment": "negative", "score_min": -0.8, "score_max": -0.2, "urgency": "low" },
+    "case_type": "clear_negative",
+    "notes": "Disappointed but measured — misled by photos, no escalation yet"
+  },
+  {
+    "id": "tc_014",
+    "from": "grace.kim@outlook.com",
+    "subject": "Delivery now 10 days overdue",
+    "body": "Hi,\n\nMy estimated delivery was 5 days. It has now been 15 days and I still have no update. I've checked the tracking page and it hasn't moved in a week. This is causing me real inconvenience and I need this resolved urgently.\n\nGrace",
+    "expected": { "sentiment": "negative", "score_min": -0.75, "score_max": -0.2, "urgency": "medium" },
+    "case_type": "clear_negative",
+    "notes": "Overdue delivery — frustrated but not yet threatening action"
+  },
+  {
+    "id": "tc_015",
+    "from": "james.riley@gmail.com",
+    "subject": "Item arrived damaged",
+    "body": "Hello,\n\nMy order arrived this morning and one of the items is damaged — there's a crack along the base that wasn't caused by transit, the packaging was intact. This is clearly a quality control issue. I'd like a replacement sent as soon as possible.\n\nJames",
+    "expected": { "sentiment": "negative", "score_min": -0.7, "score_max": -0.2, "urgency": "medium" },
+    "case_type": "clear_negative",
+    "notes": "Damaged product — clear complaint, expects resolution, medium urgency"
+  },
+  {
+    "id": "tc_016",
+    "from": "mia.santos@yahoo.com",
+    "subject": "Wrong item received",
+    "body": "Hi,\n\nI ordered the blue version of the product and received the green one instead. Order #762109. I understand mistakes happen but I need the correct item. Could you arrange a return and send the right one? This is frustrating.\n\nMia",
+    "expected": { "sentiment": "negative", "score_min": -0.6, "score_max": -0.15, "urgency": "medium" },
+    "case_type": "clear_negative",
+    "notes": "Fulfillment error — frustrated but still cooperative"
+  },
+  {
+    "id": "tc_017",
+    "from": "ethan.clark@gmail.com",
+    "subject": "Three support tickets, zero responses",
+    "body": "Hello,\n\nI have sent three separate support requests over the past two weeks regarding a defective product and I have not received a single response. Not even an acknowledgement. This level of service is completely unacceptable. Please contact me today.\n\nEthan",
+    "expected": { "sentiment": "negative", "score_min": -0.8, "score_max": -0.3, "urgency": "medium" },
+    "case_type": "clear_negative",
+    "notes": "Ignored by support — strong frustration, repeated attempts"
+  },
+  {
+    "id": "tc_018",
+    "from": "natalie.chen@yahoo.com",
+    "subject": "Missing item from my order",
+    "body": "Hi,\n\nI ordered three items and only two arrived. The third — the medium size — wasn't in the box. The packing slip shows all three were supposedly included. Please send the missing item or issue a partial refund for it.\n\nNatalie",
+    "expected": { "sentiment": "negative", "score_min": -0.6, "score_max": -0.15, "urgency": "medium" },
+    "case_type": "clear_negative",
+    "notes": "Missing item — clear problem, requesting resolution, not angry yet"
+  },
+  {
+    "id": "tc_019",
+    "from": "linda.torres@outlook.com",
+    "subject": "Quality below expectations — regret this purchase",
+    "body": "Hi,\n\nI'm genuinely disappointed. The campaign made the product look premium but what arrived feels flimsy and cheaply made. For this price — even with the discount — I expect much better. I wouldn't recommend it to anyone based on what I've received.\n\nLinda",
+    "expected": { "sentiment": "negative", "score_min": -0.7, "score_max": -0.25, "urgency": "low" },
+    "case_type": "clear_negative",
+    "notes": "Quality disappointment — negative but no escalation, just regret"
+  },
+  {
+    "id": "tc_020",
+    "from": "chris.nguyen@gmail.com",
+    "subject": "Defective product — want a replacement",
+    "body": "Hello,\n\nThe product stopped working after two uses. The mechanism jams and won't release. This is clearly a manufacturing defect. I'd like a replacement unit sent out. If that's not possible, I'll need a full refund. Please respond within 48 hours.\n\nChris",
+    "expected": { "sentiment": "negative", "score_min": -0.75, "score_max": -0.25, "urgency": "medium" },
+    "case_type": "clear_negative",
+    "notes": "Defective product with deadline — medium urgency (48h ask, not legal threat)"
+  },
+  {
+    "id": "tc_021",
+    "from": "olivia.brooks@hotmail.com",
+    "subject": "Re: Campaign order — a small concern",
+    "body": "Hi,\n\nI don't like to complain and I'm sure the campaign was well-intentioned, but the product quality really isn't what I was hoping for. It looks fine but feels very lightweight and I'm not sure it will last. I was expecting something more substantial based on the listing.\n\nOlivia",
+    "expected": { "sentiment": "negative", "score_min": -0.55, "score_max": -0.1, "urgency": "low" },
+    "case_type": "edge_polite_negative",
+    "notes": "Polite framing ('I don't like to complain') but clearly disappointed — must not be read as neutral"
+  },
+  {
+    "id": "tc_022",
+    "from": "sarah.klein@gmail.com",
+    "subject": "Possibly my mistake but product doesn't match listing",
+    "body": "Hi there,\n\nI'm sure it's probably my own error but the product I received doesn't seem to match what was shown in the campaign. The dimensions are noticeably smaller than the listing suggests. I'd appreciate some clarification — if it's a genuine discrepancy I'd like to discuss options.\n\nSarah",
+    "expected": { "sentiment": "negative", "score_min": -0.5, "score_max": -0.05, "urgency": "low" },
+    "case_type": "edge_polite_negative",
+    "notes": "Self-deprecating framing ('probably my mistake') masking a legitimate complaint"
+  },
+  {
+    "id": "tc_023",
+    "from": "mike.patel@gmail.com",
+    "subject": "Thank you for the campaign — though I must say",
+    "body": "Dear team,\n\nThank you for running this campaign — I appreciate the effort. That said, I must be honest: the product didn't quite live up to my expectations. The build quality feels a step below what the price point implies, even with the discount applied. A little disappointed overall.\n\nMike",
+    "expected": { "sentiment": "negative", "score_min": -0.5, "score_max": -0.05, "urgency": "low" },
+    "case_type": "edge_polite_negative",
+    "notes": "Opens with gratitude then reveals disappointment — the positive opener must not dominate"
+  },
+  {
+    "id": "tc_024",
+    "from": "dan.mitchell@gmail.com",
+    "subject": "Re: Support ticket #4412",
+    "body": "Oh wonderful. Another automated acknowledgement. How incredibly helpful. I raised this issue nine days ago and I've received three auto-replies and zero actual assistance. I'm sure a human will get to it eventually — presumably sometime next quarter.\n\nDan",
+    "expected": { "sentiment": "negative", "score_min": -0.8, "score_max": -0.3, "urgency": "medium" },
+    "case_type": "edge_sarcasm",
+    "notes": "Heavy sarcasm — 'Oh wonderful', 'incredibly helpful' are all negative. Must not be read as positive."
+  },
+  {
+    "id": "tc_025",
+    "from": "jess.wu@yahoo.com",
+    "subject": "Express delivery, certainly",
+    "body": "Hi,\n\nI ordered eleven days ago. Your site promised 3–5 day express delivery. Eleven days. I'm sure 'express' means something different in your world. Still no update on tracking. Remarkable service.\n\nJess",
+    "expected": { "sentiment": "negative", "score_min": -0.8, "score_max": -0.3, "urgency": "medium" },
+    "case_type": "edge_sarcasm",
+    "notes": "Sarcastic framing — 'certainly', 'remarkable service' are ironic. Sentiment is strongly negative."
+  },
+  {
+    "id": "tc_026",
+    "from": "ethan.clark@gmail.com",
+    "subject": "Great product, terrible experience",
+    "body": "Hi,\n\nHonestly the product itself is lovely — really happy with the quality. But the delivery took three weeks when five days was promised, and getting any update was impossible. The product earns 5 stars; the logistics and communication earn 1. Overall I'm left frustrated.\n\nEthan",
+    "expected": { "sentiment": "negative", "score_min": -0.4, "score_max": 0.1, "urgency": "low" },
+    "case_type": "edge_mixed",
+    "notes": "Genuine mixed sentiment — the explicit 'left frustrated' and 3-week delay should tip it negative"
+  },
+  {
+    "id": "tc_027",
+    "from": "priya.nair@outlook.com",
+    "subject": "Good product, poor support",
+    "body": "Hi,\n\nThe product quality is fine and the price with the discount is fair. However I emailed support twice about a small query and was ignored both times. It's a minor thing but being ignored doesn't leave a good impression. Mixed feelings overall.\n\nPriya",
+    "expected": { "sentiment": "negative", "score_min": -0.4, "score_max": 0.1, "urgency": "low" },
+    "case_type": "edge_mixed",
+    "notes": "Product ok but ignored by support — 'mixed feelings' but ignored support tips it negative"
+  },
+  {
+    "id": "tc_028",
+    "from": "anna.petrov@outlook.com",
+    "subject": "Love the product, hate the packaging",
+    "body": "Hello,\n\nThe product itself is fantastic and I'm really pleased with it. But the packaging was terrible — everything was loose in a box that was too big, and two items arrived scratched. They still work fine but it felt careless. Please improve your packaging.\n\nAnna",
+    "expected": { "sentiment": "neutral", "score_min": -0.25, "score_max": 0.2, "urgency": "low" },
+    "case_type": "edge_mixed",
+    "notes": "Genuinely balanced — strong positive on product, clear negative on packaging, roughly even"
+  },
+  {
+    "id": "tc_029",
+    "from": "victor.lane@gmail.com",
+    "subject": "Re: Order #990211",
+    "body": "Disgusted.",
+    "expected": { "sentiment": "negative", "score_min": -0.95, "score_max": -0.5, "urgency": "medium" },
+    "case_type": "edge_short",
+    "notes": "One-word reply — extremely negative tone even without context. Urgency medium due to intensity."
+  },
+  {
+    "id": "tc_030",
+    "from": "chloe.baker@icloud.com",
+    "subject": "Re: Your summer campaign",
+    "body": "Perfect, thank you! Arrived quickly and exactly as described. Very happy.",
+    "expected": { "sentiment": "positive", "score_min": 0.5, "score_max": 1.0, "urgency": "low" },
+    "case_type": "edge_short",
+    "notes": "Three-sentence positive — short but clearly positive, no ambiguity"
+  },
+  {
+    "id": "tc_031",
+    "from": "liam.foster@gmail.com",
+    "subject": "Still waiting",
+    "body": "Two weeks in. Still waiting. Not great.",
+    "expected": { "sentiment": "negative", "score_min": -0.65, "score_max": -0.15, "urgency": "low" },
+    "case_type": "edge_short",
+    "notes": "Short terse complaint — negative but no explicit escalation threat"
+  },
+  {
+    "id": "tc_032",
+    "from": "james.riley@gmail.com",
+    "subject": "Re: Support ticket #7801 (still open)",
+    "body": "Hi,\n\nI'm sure your support team is very busy and I completely understand that. I will simply wait for my fourth response. No rush at all. It's only my money and my time.\n\nJames",
+    "expected": { "sentiment": "negative", "score_min": -0.65, "score_max": -0.15, "urgency": "low" },
+    "case_type": "edge_passive_aggressive",
+    "notes": "Passive-aggressive — 'I'm sure', 'no rush', 'only my money' are all loaded with frustration"
+  },
+  {
+    "id": "tc_033",
+    "from": "mia.santos@yahoo.com",
+    "subject": "No worries, take your time",
+    "body": "No worries, honestly. Take all the time you need. It's only been three weeks since I placed the order. I'm sure it will arrive eventually. No rush whatsoever.\n\nMia",
+    "expected": { "sentiment": "negative", "score_min": -0.6, "score_max": -0.1, "urgency": "low" },
+    "case_type": "edge_passive_aggressive",
+    "notes": "All-positive words, completely sarcastic meaning — must not be read as positive or neutral"
+  },
+  {
+    "id": "tc_034",
+    "from": "kevin.osei@gmail.com",
+    "subject": "FULL REFUND REQUIRED — final request before bank dispute",
+    "body": "This is my final request before I contact my bank to dispute this charge. The product is defective, you have ignored four support tickets, and it has been over three weeks. Issue a full refund to my card within 24 hours or I will initiate a chargeback.\n\nKevin Osei",
+    "expected": { "sentiment": "negative", "score_min": -1.0, "score_max": -0.6, "urgency": "high" },
+    "case_type": "urgency_high",
+    "notes": "Explicit chargeback threat with deadline — unmistakably high urgency"
+  },
+  {
+    "id": "tc_035",
+    "from": "grace.kim@outlook.com",
+    "subject": "Small claims court — last chance",
+    "body": "I have documented every interaction: five unanswered emails, a defective product, and a charge that has not been refunded. If this is not resolved by end of business tomorrow I will file a claim in small claims court. I have already consulted the process.\n\nGrace Kim",
+    "expected": { "sentiment": "negative", "score_min": -1.0, "score_max": -0.6, "urgency": "high" },
+    "case_type": "urgency_high",
+    "notes": "Explicit legal (small claims court) threat — clearly high urgency"
+  },
+  {
+    "id": "tc_036",
+    "from": "david.okafor@hotmail.com",
+    "subject": "Complaint filed with consumer authority",
+    "body": "I have today filed a formal complaint with the consumer protection authority regarding this purchase. The product was falsely advertised and your customer service has been non-existent. I am also leaving detailed reviews on every platform I can access.\n\nDavid Okafor",
+    "expected": { "sentiment": "negative", "score_min": -1.0, "score_max": -0.6, "urgency": "high" },
+    "case_type": "urgency_high",
+    "notes": "Regulatory complaint already filed + review threats — high urgency"
+  },
+  {
+    "id": "tc_037",
+    "from": "natalie.chen@yahoo.com",
+    "subject": "Sharing this with my 14,000 followers unless resolved today",
+    "body": "I have 14,000 followers on Instagram and a further 8,000 on TikTok. I have already drafted a detailed post about my experience with this campaign. I will publish it tonight unless I receive a resolution — full refund + apology — by 5pm today.\n\nNatalie Chen",
+    "expected": { "sentiment": "negative", "score_min": -1.0, "score_max": -0.6, "urgency": "high" },
+    "case_type": "urgency_high",
+    "notes": "Large-following social media threat with explicit deadline — highest urgency reputational risk"
+  },
+  {
+    "id": "tc_038",
+    "from": "ben.walker@gmail.com",
+    "subject": "FINAL NOTICE",
+    "body": "This is your final notice. I have been patient for four weeks. The product is broken, my refund has not arrived, and your team has ignored every message. If I do not receive a full refund confirmation by tomorrow morning I will pursue every legal avenue available to me.\n\nBen Walker",
+    "expected": { "sentiment": "negative", "score_min": -1.0, "score_max": -0.6, "urgency": "high" },
+    "case_type": "urgency_high",
+    "notes": "FINAL NOTICE + legal threat — very high urgency"
+  },
+  {
+    "id": "tc_039",
+    "from": "olivia.brooks@hotmail.com",
+    "subject": "Chargeback initiated",
+    "body": "I have just called American Express and initiated a chargeback for this transaction. I gave you four weeks and multiple opportunities to resolve this. The case is now with my bank. I will also be reporting this to Trading Standards.\n\nOlivia Brooks",
+    "expected": { "sentiment": "negative", "score_min": -1.0, "score_max": -0.6, "urgency": "high" },
+    "case_type": "urgency_high",
+    "notes": "Chargeback already initiated — high urgency, past the warning stage"
+  },
+  {
+    "id": "tc_040",
+    "from": "sarah.klein@gmail.com",
+    "subject": "Legal advice obtained regarding misleading campaign",
+    "body": "I have spoken with a consumer rights solicitor regarding the misleading claims in this campaign. I have been advised that I have grounds to pursue compensation. I am giving you 48 hours to make this right before I instruct my solicitor to proceed.\n\nSarah Klein",
+    "expected": { "sentiment": "negative", "score_min": -1.0, "score_max": -0.6, "urgency": "high" },
+    "case_type": "urgency_high",
+    "notes": "Lawyer already consulted, explicit 48h ultimatum — high urgency"
+  }
+]

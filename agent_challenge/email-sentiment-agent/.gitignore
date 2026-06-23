@@ -1,0 +1,4 @@
+sentiment.db
+alerts.log
+evals/results.json
+evals/judge_results.json
