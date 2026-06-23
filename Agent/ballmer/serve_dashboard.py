@@ -70,8 +70,12 @@ class AppState:
 
     def apply(self, patch, root):
         """Merge patch into config. Re-runs simulation for physiology changes."""
-        needs_sim = any(k in patch for k in ("food_state", "auto_consume", "start_time"))
+        SIM_KEYS = ("food_state", "auto_consume", "start_time", "profile_overrides")
+        needs_sim = any(k in patch for k in SIM_KEYS)
         with self._lock:
+            if "profile_overrides" in patch:
+                existing = self._cfg.get("profile_overrides") or {}
+                self._cfg["profile_overrides"] = {**existing, **patch.pop("profile_overrides")}
             self._cfg.update(patch)
             cfg = self._cfg
             if needs_sim:
@@ -81,6 +85,7 @@ class AppState:
                     food_state=cfg["food_state"],
                     write_log=False,
                     start_time_str=cfg.get("start_time"),
+                    profile_overrides=cfg.get("profile_overrides") or None,
                 )
                 frames = build_frames(session)
                 self._meta = session_meta(session)
@@ -148,6 +153,7 @@ def main(argv=None):
         "speed": args.speed,
         "loop": not args.no_loop,
         "start_time": None,
+        "profile_overrides": {},
     }
 
     session = run_session(str(ROOT), auto_consume=cfg["auto_consume"],

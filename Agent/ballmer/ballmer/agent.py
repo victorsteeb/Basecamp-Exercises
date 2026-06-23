@@ -87,19 +87,31 @@ def load_state(root: str | Path = ".") -> State:
 # --------------------------------------------------------------------------
 # Burndown: when do we leave the target window?
 # --------------------------------------------------------------------------
-def time_to_leave_window(current_bac: float, window: tuple[float, float],
-                         beta: float) -> float | None:
-    """Hours until BAC declines out the BOTTOM of the window, assuming NO more
-    drinks and steady zero-order elimination β.
+def time_to_leave_window(events: list[DrinkEvent], body: BodyParams,
+                         now_hours: float, window: tuple[float, float],
+                         current_bac: float | None = None,
+                         t_search: float = 12.0) -> float | None:
+    """Hours until BAC declines below the BOTTOM of the window, assuming NO more
+    drinks.
 
-    Returns None if already below the window (nothing to burn down). If above the
-    window, this is the time to drop below the *low* edge (i.e. fully exit), which
-    is the 'burndown to leaving the range' the user cares about.
+    Uses ODE integration (not the naive linear formula) so residual absorption
+    from drinks still being processed is accounted for — BAC may continue rising
+    for a bit before it declines, which the linear approximation misses entirely.
+
+    Returns None if already below the window (nothing to burn down).
+    Returns t_search if BAC never drops below low within the search window.
     """
     low, _ = window
+    if current_bac is None:
+        current_bac = bac_at(events, body, now_hours)
     if current_bac <= low:
         return None
-    return (current_bac - low) / beta
+    times, bac = bac_curve(events, body, t_end=now_hours + t_search,
+                            t_start=now_hours)
+    for t, b in zip(times, bac):
+        if b <= low:
+            return round(t - now_hours, 4)
+    return round(t_search, 4)
 
 
 # --------------------------------------------------------------------------
@@ -136,7 +148,8 @@ def tick(events: list[DrinkEvent], st: State, now_hours: float,
     """One wake-up: assess current BAC, produce a recommendation, package it."""
     rec = recommend_next(events, st.body, st.library, now_hours,
                          window=st.window, ceiling=st.ceiling, food_state=food_state)
-    burndown = time_to_leave_window(rec.current_bac, st.window, st.body.beta)
+    burndown = time_to_leave_window(events, st.body, now_hours, st.window,
+                                    current_bac=rec.current_bac)
     return TickRecord(
         now_hours=now_hours,
         clock=_clock(st.session_start, now_hours),
@@ -152,7 +165,8 @@ def tick(events: list[DrinkEvent], st: State, now_hours: float,
 def run_session(root: str | Path = ".", auto_consume: bool = True,
                 food_state: str = config.DEFAULT_FOOD_STATE,
                 write_log: bool = True,
-                start_time_str: str | None = None) -> SessionRecord:
+                start_time_str: str | None = None,
+                profile_overrides: dict | None = None) -> SessionRecord:
     """Fast-forward the whole night, ticking every tick_interval_min.
 
     auto_consume: if True, when the agent recommends ORDER the simulated drinker
@@ -164,6 +178,9 @@ def run_session(root: str | Path = ".", auto_consume: bool = True,
     if start_time_str:
         h, m = map(int, start_time_str.split(":"))
         st.session_start = st.session_start.replace(hour=h, minute=m, second=0)
+    if profile_overrides:
+        st.profile = {**st.profile, **profile_overrides}
+        st.body = BodyParams.from_profile(st.profile)
     events = list(st.events)
 
     dt_h = st.tick_interval_min / 60.0

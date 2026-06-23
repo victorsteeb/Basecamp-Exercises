@@ -55,6 +55,10 @@
   input[type=time]{background:#0c1116;border:1px solid var(--line);color:var(--ink);
     border-radius:4px;padding:2px 6px;font-size:11px;width:86px;color-scheme:dark}
   input[type=range]{accent-color:var(--accent);cursor:pointer;width:80px}
+  input[type=number]{background:#0c1116;border:1px solid var(--line);color:var(--ink);
+    border-radius:4px;padding:2px 6px;font-size:11px;width:70px;-moz-appearance:textfield}
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   .speed-lbl{color:var(--ink);font-variant-numeric:tabular-nums;margin-left:4px}
   .recalc{font-size:10px;color:var(--accent);margin-left:6px;opacity:0;transition:opacity .2s}
   .recalc.show{opacity:1}
@@ -125,6 +129,19 @@
         <label>Loop</label>
         <button class="tog on" id="ctl-loop">ON</button>
       </div>
+
+      <div class="ctrl-row" style="margin-top:4px">
+        <label>Weight (lb)</label>
+        <input type="number" id="ctl-weight" min="80" max="400" step="1" value="220" />
+      </div>
+      <div class="ctrl-row">
+        <label>Height (in)</label>
+        <input type="number" id="ctl-height" min="54" max="84" step="1" value="73" />
+      </div>
+      <div class="ctrl-row">
+        <label>Age</label>
+        <input type="number" id="ctl-age" min="21" max="90" step="1" value="39" />
+      </div>
     </div>
 
     <div class="panel">
@@ -166,6 +183,14 @@ function draw(s){
   // ceiling line
   ctx.strokeStyle=COL.PAST_CEILING; ctx.setLineDash([6,4]); ctx.beginPath();
   ctx.moveTo(padL,Y(s.ceiling)); ctx.lineTo(W-padR,Y(s.ceiling)); ctx.stroke(); ctx.setLineDash([]);
+
+  // 0.08% US legal driving limit
+  if(0.08 <= yTop){
+    ctx.strokeStyle="rgba(239,120,60,.6)"; ctx.lineWidth=1.2; ctx.setLineDash([4,6]); ctx.beginPath();
+    ctx.moveTo(padL,Y(0.08)); ctx.lineTo(W-padR,Y(0.08)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle="rgba(239,120,60,.85)"; ctx.font="10px sans-serif"; ctx.textAlign="left";
+    ctx.fillText("0.080% legal limit", padL+4, Y(0.08)-3);
+  }
 
   // axes labels (y)
   ctx.fillStyle="#8b98a5"; ctx.font="11px sans-serif"; ctx.textAlign="right";
@@ -307,6 +332,25 @@ document.getElementById("ctl-loop").addEventListener("click",()=>{
   postConfig({loop: CTL.loop});
 });
 
+// Profile (weight / height / age) — debounced so we don't re-sim on every keystroke
+let _profileTimer = null;
+function scheduleProfilePush(){
+  clearTimeout(_profileTimer);
+  _profileTimer = setTimeout(()=>{
+    const w = parseFloat(document.getElementById("ctl-weight").value);
+    const h = parseFloat(document.getElementById("ctl-height").value);
+    const a = parseFloat(document.getElementById("ctl-age").value);
+    const overrides = {};
+    if(!isNaN(w) && w>0) overrides.weight_lb = w;
+    if(!isNaN(h) && h>0) overrides.height_in = h;
+    if(!isNaN(a) && a>0) overrides.age = a;
+    if(Object.keys(overrides).length) postConfig({profile_overrides: overrides});
+  }, 700);
+}
+["ctl-weight","ctl-height","ctl-age"].forEach(id=>{
+  document.getElementById(id).addEventListener("input", scheduleProfilePush);
+});
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 async function init(){
@@ -327,6 +371,13 @@ async function init(){
   const loopBtn = document.getElementById("ctl-loop");
   loopBtn.textContent = CTL.loop ? "ON" : "OFF";
   loopBtn.classList.toggle("on", CTL.loop);
+
+  // Profile inputs from live meta (reflects any active overrides)
+  if(META.profile){
+    document.getElementById("ctl-weight").value = META.profile.weight_lb ?? 220;
+    document.getElementById("ctl-height").value = META.profile.height_in ?? 73;
+    document.getElementById("ctl-age").value    = META.profile.age ?? 39;
+  }
 
   poll(); setInterval(poll, 1000);
 }

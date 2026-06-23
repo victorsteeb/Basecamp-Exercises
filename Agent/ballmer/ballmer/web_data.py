@@ -51,17 +51,24 @@ def build_frames(session: SessionRecord) -> list[dict]:
         else:
             times, bac = [0.0], [0.0]
 
-        # Burndown projection: decline at beta from (now, current) to crossing low.
+        # Burndown projection: ODE forward from now with no new drinks.
+        # Uses the same integrator as the main curve so residual absorption is
+        # captured — the simple linear formula (current - low) / beta misses this.
         bd_hours = tk.burndown_hours
         bd_t, bd_bac = [], []
         bd_eta = None
         if bd_hours is not None and bd_hours > 0:
-            steps = 24
-            for s in range(steps + 1):
-                tt = now + bd_hours * s / steps
-                bd_t.append(round(tt, 4))
-                bd_bac.append(round(max(0.0, tk.current_bac - beta * (tt - now)), 5))
-            bd_eta = _clock(session, now + bd_hours)
+            low = st.window[0]
+            t_end_proj = now + bd_hours + 1.0
+            fwd_times, fwd_bacs = bac_curve(events_so_far, st.body,
+                                             t_end=t_end_proj, t_start=now)
+            for ft, fb in zip(fwd_times, fwd_bacs):
+                bd_t.append(round(ft, 4))
+                bd_bac.append(round(fb, 5))
+                if fb <= low:
+                    break
+            if bd_t:
+                bd_eta = _clock(session, bd_t[-1])
 
         events_marks = [
             {"t": round(e.t_hours, 3), "label": e.label, "grams": round(e.grams, 1)}
