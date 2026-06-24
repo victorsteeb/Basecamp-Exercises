@@ -19,7 +19,7 @@ from datetime import timedelta
 
 from .agent import SessionRecord, time_to_leave_window
 from .bac_model import bac_curve
-from .recommend import IN, _na_drink  # noqa: F401  (_na_drink kept for parity)
+from .recommend import IN, ORDER, _na_drink  # noqa: F401  (_na_drink kept for parity)
 
 _STATUS_LABEL = {
     "BELOW_WINDOW": "BELOW BAND",
@@ -75,18 +75,28 @@ def build_frames(session: SessionRecord) -> list[dict]:
             for e in events_so_far
         ]
 
-        ticklog = [
-            {
-                "clock": session.ticks[j].clock,
-                "bac": round(session.ticks[j].current_bac, 3),
-                "status": _STATUS_LABEL.get(session.ticks[j].status, session.ticks[j].status),
-                "action": session.ticks[j].action,
-                "drink": session.ticks[j].drink_name,
-                "burndown": (round(session.ticks[j].burndown_hours, 2)
-                             if session.ticks[j].burndown_hours is not None else None),
-            }
-            for j in range(i + 1)
-        ]
+        body = st.body
+        ticklog = []
+        tab_total = 0.0
+        for j in range(i + 1):
+            tk_j = session.ticks[j]
+            drink_obj = tk_j.recommendation.drink if tk_j.action == ORDER else None
+            price = drink_obj.price if drink_obj else None
+            bac_delta = (round(drink_obj.total_ethanol_g / (body.r * body.weight_kg * 10), 4)
+                         if drink_obj else None)
+            if price:
+                tab_total += price
+            ticklog.append({
+                "clock": tk_j.clock,
+                "bac": round(tk_j.current_bac, 3),
+                "status": _STATUS_LABEL.get(tk_j.status, tk_j.status),
+                "action": tk_j.action,
+                "drink": tk_j.drink_name,
+                "burndown": (round(tk_j.burndown_hours, 2)
+                             if tk_j.burndown_hours is not None else None),
+                "price": price,
+                "bac_delta": bac_delta,
+            })
 
         frames.append({
             "cursor": i,
@@ -108,6 +118,7 @@ def build_frames(session: SessionRecord) -> list[dict]:
             "burndown_line": {"t": bd_t, "bac": bd_bac},
             "events": events_marks,
             "ticks": ticklog,
+            "tab_total": round(tab_total, 2),
         })
     return frames
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Ballmer — live BAC dashboard</title>
+<title>Ballmer — live BAC model</title>
 <style>
   :root{
     --bg:#0f1419; --panel:#1a2129; --ink:#e6edf3; --muted:#8b98a5; --line:#2b3640;
@@ -60,6 +60,12 @@
   .speed-lbl{color:var(--ink);font-variant-numeric:tabular-nums;margin-left:4px}
   .recalc{font-size:10px;color:var(--accent);margin-left:6px;opacity:0;transition:opacity .2s}
   .recalc.show{opacity:1}
+  .explainer{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);
+    border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;line-height:1.55;color:var(--muted)}
+  .explainer strong{color:var(--ink)}
+  .hdr-row{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .tab-kpi{font-size:22px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .tab-kpi small{font-size:12px;font-weight:400;color:var(--muted);margin-left:4px}
   .llm-panel{background:#15202b;border:1px solid var(--line);border-radius:10px;
     padding:12px 14px;margin-top:10px}
   .llm-panel .llm-hd{display:flex;align-items:center;gap:8px;margin-bottom:8px}
@@ -73,8 +79,14 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>🍸 Ballmer — live BAC dashboard</h1>
+  <div class="hdr-row">
+    <h1 style="margin:0">🍸 Ballmer — live BAC model</h1>
+    <div class="tab-kpi"><span id="tab-total">$0.00</span><small>running tab</small></div>
+  </div>
   <div class="sub" id="sub">connecting…</div>
+  <div class="explainer">
+    <strong>The Ballmer Peak</strong> (<a href="https://xkcd.com/323/" target="_blank" style="color:var(--accent)">XKCD #323</a>) is a joke theory: programmers supposedly hit peak productivity at a precise BAC of ~0.1337% — just drunk enough to silence the inner critic, not so drunk they can't type. This model tracks BAC in real time using the Widmark + Watson pharmacokinetic equations and recommends what to order to reach and hold that band. <strong>It's a comedy bit.</strong> That BAC level means serious impairment and is above every legal driving limit.
+  </div>
   <div class="grid">
     <div class="panel">
       <span class="pill" id="pill">—</span>
@@ -167,7 +179,7 @@
       </div>
 
       <table>
-        <thead><tr><th>time</th><th>BAC%</th><th>status</th><th>action</th><th>burndown</th></tr></thead>
+        <thead><tr><th>time</th><th>BAC%</th><th>status</th><th>action</th><th>BAC +</th><th>price</th><th>burndown</th></tr></thead>
         <tbody id="log"></tbody>
       </table>
       <div class="foot" id="foot"></div>
@@ -274,14 +286,22 @@ function render(s){
 
   document.getElementById("msg").textContent=s.message||"";
 
+  // tab total KPI
+  document.getElementById("tab-total").textContent =
+    "$" + (s.tab_total || 0).toFixed(2);
+
   // log
   const tb=document.getElementById("log"); tb.innerHTML="";
   (s.ticks||[]).slice().reverse().forEach(t=>{
     const tr=document.createElement("tr");
     const c=COL[Object.keys(COL).find(k=>k.startsWith(t.status.split(" ")[0]))]||"#ccc";
     const act=t.action+(t.drink?(": "+t.drink):"");
+    const bacDelta = t.bac_delta != null ? "+"+t.bac_delta.toFixed(4)+"%" : "—";
+    const price = t.price != null ? "$"+t.price.toFixed(2) : "—";
     tr.innerHTML=`<td>${t.clock}</td><td>${t.bac.toFixed(3)}</td>
       <td class="tag" style="color:${c}">${t.status}</td><td>${act}</td>
+      <td style="color:var(--in)">${bacDelta}</td>
+      <td style="color:var(--accent)">${price}</td>
       <td>${t.burndown==null?"—":t.burndown.toFixed(2)+"h"}</td>`;
     tb.appendChild(tr);
   });
@@ -292,7 +312,7 @@ function render(s){
 function updateMetaUI(){
   document.getElementById("sub").textContent =
     "always-on agent · ticking a simulated bar night · session start "+
-    new Date(META.session_start).toLocaleTimeString();
+    new Date(META.session_start).toLocaleTimeString() + " · Widmark/Watson BAC model";
   document.getElementById("m_r").textContent=META.r;
   document.getElementById("m_b").textContent=META.beta+" %/hr";
   document.getElementById("m_k").textContent=META.k_a+" /hr";
