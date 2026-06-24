@@ -36,6 +36,7 @@ class Drink:
     ingredients: tuple[Ingredient, ...]
     category: str = ""
     notes: str = ""
+    vibe_score: int = 5   # 1-10 subjective desirability for a Ballmer Peak session
 
     @property
     def total_ethanol_g(self) -> float:
@@ -56,7 +57,8 @@ def _drink_from_dict(d: dict) -> Drink:
     ings = tuple(Ingredient(name=i["name"], oz=i["oz"], abv=i["abv"])
                  for i in d["ingredients"])
     return Drink(name=d["name"], ingredients=ings,
-                 category=d.get("category", ""), notes=d.get("notes", ""))
+                 category=d.get("category", ""), notes=d.get("notes", ""),
+                 vibe_score=int(d.get("vibe", 5)))
 
 
 def load_library(path: str | Path = "drink-library.json") -> list[Drink]:

@@ -62,6 +62,15 @@
   .speed-lbl{color:var(--ink);font-variant-numeric:tabular-nums;margin-left:4px}
   .recalc{font-size:10px;color:var(--accent);margin-left:6px;opacity:0;transition:opacity .2s}
   .recalc.show{opacity:1}
+  .llm-panel{background:#15202b;border:1px solid var(--line);border-radius:10px;
+    padding:12px 14px;margin-top:10px}
+  .llm-panel .llm-hd{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .llm-panel .llm-hd span{font-size:13px;font-weight:700;color:var(--accent)}
+  .llm-panel .llm-reasoning{font-size:13px;line-height:1.55;color:var(--ink)}
+  .ask-btn{background:var(--accent);border:none;color:#000;padding:5px 14px;
+    border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:.03em}
+  .ask-btn:hover{opacity:.85} .ask-btn:disabled{opacity:.4;cursor:not-allowed}
+  .llm-status{color:var(--muted);font-size:11px;margin-left:8px}
 </style>
 </head>
 <body>
@@ -147,6 +156,21 @@
     <div class="panel">
       <canvas id="chart" width="900" height="360"></canvas>
       <div class="msg" id="msg"></div>
+
+      <div style="margin-top:10px;display:flex;align-items:center">
+        <button class="ask-btn" id="ask-btn" onclick="askClaude()">🤖 Ask Claude</button>
+        <span class="llm-status" id="llm-status"></span>
+      </div>
+
+      <div class="llm-panel" id="llm-panel" style="display:none">
+        <div class="llm-hd">
+          <span>🤖 Claude recommends</span>
+          <span class="pill" id="llm-drink" style="font-size:11px;padding:2px 10px"></span>
+          <span id="llm-vibe" style="color:var(--muted);font-size:11px"></span>
+        </div>
+        <div class="llm-reasoning" id="llm-reasoning"></div>
+      </div>
+
       <table>
         <thead><tr><th>time</th><th>BAC%</th><th>status</th><th>action</th><th>burndown</th></tr></thead>
         <tbody id="log"></tbody>
@@ -350,6 +374,37 @@ function scheduleProfilePush(){
 ["ctl-weight","ctl-height","ctl-age"].forEach(id=>{
   document.getElementById(id).addEventListener("input", scheduleProfilePush);
 });
+
+// ── Ask Claude ────────────────────────────────────────────────────────────────
+
+async function askClaude(){
+  const btn = document.getElementById("ask-btn");
+  const status = document.getElementById("llm-status");
+  btn.disabled = true;
+  status.textContent = "thinking…";
+  try{
+    const r = await fetch("/api/llm_reason", {method:"POST"});
+    const data = await r.json();
+    if(data.error) throw new Error(data.error);
+
+    const drinkEl = document.getElementById("llm-drink");
+    drinkEl.textContent = data.drink_name;
+    // Color the pill by whether it's HOLD or a drink
+    const isHold = data.drink_name === "HOLD";
+    drinkEl.style.background = isHold ? "#3fb6e0" : "#37d67a";
+    drinkEl.style.color = "#06140c";
+
+    document.getElementById("llm-vibe").textContent =
+      data.vibe_score ? `vibe ${data.vibe_score}/10` : "";
+    document.getElementById("llm-reasoning").textContent = data.reasoning;
+    document.getElementById("llm-panel").style.display = "block";
+    status.textContent = "";
+  }catch(e){
+    status.textContent = "⚠ " + e.message;
+  }finally{
+    btn.disabled = false;
+  }
+}
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 

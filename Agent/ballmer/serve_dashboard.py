@@ -124,6 +124,16 @@ def make_handler(app_state: AppState, root: Path):
                 patch = json.loads(self.rfile.read(length))
                 app_state.apply(patch, root)
                 self._send(json.dumps({"ok": True}))
+            elif self.path.startswith("/api/llm_reason"):
+                try:
+                    from ballmer.llm_agent import llm_reason
+                    from ballmer.drinks import load_library
+                    frame = app_state.frame()
+                    library = load_library(root / "drink-library.json")
+                    result = llm_reason(frame, library)
+                    self._send(json.dumps(result))
+                except Exception as exc:
+                    self._send(json.dumps({"error": str(exc)}), status=500)
             else:
                 self.send_error(404)
 
