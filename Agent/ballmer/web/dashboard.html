@@ -14,9 +14,7 @@
        font:14px/1.45 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
   .wrap{max-width:1060px;margin:0 auto;padding:18px}
   h1{font-size:20px;margin:0 0 2px} .sub{color:var(--muted);font-size:12px;margin-bottom:12px}
-  .warn{background:#3a1d1d;border:1px solid #5a2a2a;color:#ffd5d5;padding:8px 12px;
-        border-radius:8px;font-size:12px;margin-bottom:14px}
-  .grid{display:grid;grid-template-columns:310px 1fr;gap:14px}
+.grid{display:grid;grid-template-columns:310px 1fr;gap:14px}
   .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
   .pill{display:inline-block;padding:4px 12px;border-radius:999px;font-weight:700;
         letter-spacing:.04em;font-size:13px}
@@ -77,9 +75,6 @@
 <div class="wrap">
   <h1>🍸 Ballmer — live BAC dashboard</h1>
   <div class="sub" id="sub">connecting…</div>
-  <div class="warn">⚠ The "Ballmer Peak" (0.129–0.138% BAC) is a joke from XKCD #323. It is far above
-    every legal driving limit and is <b>not</b> health or safety advice. Do not drive. Modeling demo only.</div>
-
   <div class="grid">
     <div class="panel">
       <span class="pill" id="pill">—</span>
@@ -216,9 +211,15 @@ function draw(s){
     ctx.fillText("0.080% legal limit", padL+4, Y(0.08)-3);
   }
 
-  // axes labels (y)
-  ctx.fillStyle="#8b98a5"; ctx.font="11px sans-serif"; ctx.textAlign="right";
-  for(let k=0;k<=5;k++){ const v=yTop*k/5; ctx.fillText(v.toFixed(3), padL-6, Y(v)+3); }
+  // y-axis: fixed 0.02 ticks with light gridlines
+  ctx.font="11px sans-serif"; ctx.textAlign="right";
+  const tickStep=0.02, nTicks=Math.ceil(yTop/tickStep);
+  for(let i=0;i<=nTicks;i++){
+    const v=i*tickStep; if(v>yTop+1e-9) break;
+    ctx.strokeStyle="rgba(43,54,64,.55)"; ctx.lineWidth=0.5; ctx.beginPath();
+    ctx.moveTo(padL,Y(v)); ctx.lineTo(W-padR,Y(v)); ctx.stroke();
+    ctx.fillStyle="#8b98a5"; ctx.fillText(v.toFixed(2), padL-6, Y(v)+3);
+  }
   // x ticks
   ctx.textAlign="center";
   for(let h=0;h<=Math.ceil(dur);h++){ ctx.fillText(h+"h", X(h), H-10); }
