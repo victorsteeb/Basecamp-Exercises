@@ -131,7 +131,7 @@ else:
     _status(True, "API key verified - you're connected to Claude.")
 
 client = anthropic.Anthropic(timeout=900.0)  # Longer timeout: needed for max_tokens>21333 with non-streaming calls
-MODEL = "claude-sonnet-4-6"
+MODEL = "claude-sonnet-5"
 
 # ── Sample Ticket Data ──
 

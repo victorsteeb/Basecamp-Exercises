@@ -201,7 +201,7 @@ client = anthropic.Anthropic()
 # The model portfolio. Aliases, not date-pinned IDs — aliases track the current snapshot
 # and don't 404 when a snapshot is retired.
 MODEL_HAIKU = "claude-haiku-4-5"
-MODEL_SONNET = "claude-sonnet-4-6"
+MODEL_SONNET = "claude-sonnet-5"
 MODEL_OPUS = "claude-opus-4-8"
 
 print(f"SDK {anthropic.__version__} · portfolio: {MODEL_HAIKU}, {MODEL_SONNET}, {MODEL_OPUS}")
@@ -312,7 +312,7 @@ print(f"TTFT {ttft*1000:.0f}ms · TTC {total*1000:.0f}ms · OTPS {otps:.1f} tok/
 # | Model | Input $/MTok | Output $/MTok |
 # |---|---|---|
 # | Haiku 4.5 | $1.00 | $5.00 |
-# | Sonnet 4.6 | $3.00 | $15.00 |
+# | Sonnet 5 | $3.00 | $15.00 |
 # | Opus 4.8 | $5.00 | $25.00 |
 #
 # *(Verify against the pricing page before quoting in a deliverable — table cached June 2026.

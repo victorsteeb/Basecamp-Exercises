@@ -98,7 +98,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 # The base model. It is plenty capable — every failure in this system is
 # structural, not a model-capability ceiling. Swapping in a bigger model costs
 # more and does NOT move RESOLVED. That's the whole point of the exercise.
-MODEL = "claude-sonnet-4-6"
+MODEL = "claude-sonnet-5"
 
 # $ per 1M tokens (input, output). Used to price each run so the cost lever is visible.
 # Rates: platform.claude.com/docs/en/about-claude/pricing — add a line for any model not listed.
@@ -108,7 +108,7 @@ PRICING = {
     "claude-opus-4-8":   (5.00, 25.00),
     "claude-opus-4-7":   (5.00, 25.00),
     "claude-opus-4-6":   (5.00, 25.00),
-    "claude-sonnet-4-6": (3.00, 15.00),
+    "claude-sonnet-5":   (3.00, 15.00),
     "claude-haiku-4-5":  (1.00, 5.00),
 }
 
@@ -601,10 +601,10 @@ def cost_of(usage, model):
     if model not in PRICING and model not in _unpriced_models_warned:
         _unpriced_models_warned.add(model)
         print(f"\n  [pricing] '{model}' is not in PRICING, so COST is computed at "
-              f"claude-sonnet-4-6 rates and will be wrong for this model.\n"
+              f"claude-sonnet-5 rates and will be wrong for this model.\n"
               f"  [pricing] Add its rates to PRICING in Diagnose_Fix_Brief.py from "
               f"https://platform.claude.com/docs/en/about-claude/pricing\n", flush=True)
-    in_rate, out_rate = PRICING.get(model, PRICING["claude-sonnet-4-6"])
+    in_rate, out_rate = PRICING.get(model, PRICING["claude-sonnet-5"])
     return (
         usage["input_tokens"] / 1e6 * in_rate
         + usage["output_tokens"] / 1e6 * out_rate

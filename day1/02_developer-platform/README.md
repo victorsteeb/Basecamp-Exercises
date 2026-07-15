@@ -4,7 +4,7 @@
 A multi-tool support ticket agent for TechFlow, a B2B SaaS company processing 500+ tickets per day. The agent reads ticket details, searches a knowledge base, and produces a structured resolution — using the Claude API directly with no framework.
 
 ## Main learning
-How to build an agentic loop with tool use using the Claude API. You'll define tool schemas, handle multi-step tool calls, and use Claude Sonnet 4.6's adaptive thinking to let the model reason through complex ticket triage automatically.
+How to build an agentic loop with tool use using the Claude API. You'll define tool schemas, handle multi-step tool calls, and use Claude Sonnet 5's adaptive thinking to let the model reason through complex ticket triage automatically.
 
 ---
 

@@ -18,7 +18,7 @@ Here's what one run looks like:
 
 ```
 ==================================================================
-  MERIDIAN SCOREBOARD  ·  claude-sonnet-4-6  ·  5 trials/ticket
+  MERIDIAN SCOREBOARD  ·  claude-sonnet-5  ·  5 trials/ticket
 ==================================================================
 
   Ticket T-4471   routing: account (x4); account, billing (x1)

@@ -272,10 +272,40 @@ def run_agent(prompt, eval_mode=False, model=None):
 
 print("boutique agent ready.")
 
-INTERACTIVE_CHAT = False  # set True to chat with the agent — off by default so "Run All" doesn't block here
+ANTHROPIC_ORANGE = "#E07A5F"  # brand accent — keeps the boutique agent from blending into the notebook's black-on-white output
 
+def _display_chat_hint():
+    """Tells you how to turn on the interactive chat: Anthropic-orange in a notebook, plain
+    text when run as a script."""
+    try:
+        from IPython import get_ipython
+        shell = get_ipython()
+        if shell is None or shell.__class__.__name__ != "ZMQInteractiveShell":
+            raise RuntimeError("not in a notebook kernel - use the plain-text banner")
+        from IPython.display import display, HTML
+        display(HTML(
+            f'<div style="background:{ANTHROPIC_ORANGE};color:#fff;padding:10px 16px;'
+            f'border-radius:8px;font-family:sans-serif;font-size:14px;">'
+            f'🛍️ <b>The Boutique Agent</b> is ready — set '
+            f'<code style="background:rgba(255,255,255,.3);padding:1px 5px;border-radius:4px;">INTERACTIVE_CHAT = True</code> '
+            f'above and run this cell again to chat.</div>'
+        ))
+    except Exception:
+        print("The Boutique Agent is ready — set INTERACTIVE_CHAT = True above and run this cell again to chat.")
+
+
+INTERACTIVE_CHAT = True  # chat with the agent by default — set False (and Run All) to skip straight to the eval sections
+
+if not INTERACTIVE_CHAT:
+    _display_chat_hint()
+else:
+    print("Boutique Agent Response Results")
+
+# The input() prompt below is VS Code's own editor UI (like the command palette) — its
+# colors always follow the user's VS Code theme and can't be styled from here. Since text
+# is the only lever we have, the prompt itself carries the branding instead.
 while INTERACTIVE_CHAT:
-    query = input("\nYou: ")
+    query = input("\n🛍️  The Boutique Shopping agent is running, ask your question and press ENTER, press ESC to stop the agent.")
     if not query.strip() or query.strip().lower() in ("quit", "exit", "q"):
         print("Session ended.")
         break
