@@ -17,16 +17,14 @@ Work the exercise in the repo — don't copy code out of a chat window. No termi
 1. **File → Open Folder** and select this folder.
 2. Install the **Python** and **Jupyter** extensions if prompted.
 3. Open [`Building_an_Eval.ipynb`](Building_an_Eval.ipynb) and pick a **Python 3** kernel — run cells with **Shift+Enter**, or **Run All** (the chat cell starts an interactive session automatically; type `quit` to move past it, or set `INTERACTIVE_CHAT = False` in that cell first to skip straight to the eval sections).
-4. Prefer the terminal? Run it straight through: `python3 Building_an_Eval.py`.
 
 ### Claude Code (CLI)
 
-`cd` into this folder, then run it end to end or pair with Claude Code on the exercise:
+`cd` into this folder and pair with Claude Code on the exercise:
 
 ```bash
 cd day2/01_evals
-python3 Building_an_Eval.py     # run straight through
-claude                          # …or work the exercise with Claude Code as your pair
+claude                          # work the exercise with Claude Code as your pair
 ```
 
 ### Claude Desktop

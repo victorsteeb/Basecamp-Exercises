@@ -22,17 +22,15 @@ Running the notebook? You can skip the export — the setup cell prompts for you
 
 1. **File → Open Folder** and select this folder.
 2. Install the **Python** and **Jupyter** extensions if prompted.
-3. Open [`Developer_Platform.ipynb`](Developer_Platform.ipynb) and pick a **Python 3** kernel — run cells with **Shift+Enter** or **Run All**.
-4. Prefer the terminal? `python3 Developer_Platform.py` verifies your key, loads the scaffold, and stops at the first unbuilt ✏️ stub — this is a build-along: implement the stubs as the session goes and re-run as you build.
+3. Open [`Developer_Platform.ipynb`](Developer_Platform.ipynb) and pick a **Python 3** kernel — run cells with **Shift+Enter** or **Run All**. This is a build-along: implement the ✏️ stubs as the session goes and re-run as you build.
 
 ### Claude Code (CLI)
 
-`cd` into this folder, then work the scaffold from the shell or pair with Claude Code on the exercise:
+`cd` into this folder and pair with Claude Code on the exercise:
 
 ```bash
 cd day1/02_developer-platform
-python3 Developer_Platform.py     # runs until the first unbuilt ✏️ stub
-claude                            # …or work the exercise with Claude Code as your pair
+claude                            # work the exercise with Claude Code as your pair
 ```
 
 ### Claude Desktop

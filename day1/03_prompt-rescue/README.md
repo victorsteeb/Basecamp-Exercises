@@ -21,16 +21,14 @@ export ANTHROPIC_API_KEY=your_key_here   # your shell, the VS Code terminal, or 
 1. **File → Open Folder** and select this folder.
 2. Install the **Python** and **Jupyter** extensions if prompted.
 3. Open [`Prompt_Rescue_solo.ipynb`](Prompt_Rescue_solo.ipynb) and pick a **Python 3** kernel — run cells with **Shift+Enter** or **Run All**.
-4. Prefer the terminal? Run it straight through: `python3 Prompt_Rescue_solo.py`.
 
 ### Claude Code (CLI)
 
-`cd` into this folder, then run it end to end or pair with Claude Code on the exercise:
+`cd` into this folder and pair with Claude Code on the exercise:
 
 ```bash
 cd day1/03_prompt-rescue
-python3 Prompt_Rescue_solo.py     # run straight through
-claude                            # …or work the exercise with Claude Code as your pair
+claude                            # work the exercise with Claude Code as your pair
 ```
 
 ### Claude Desktop
