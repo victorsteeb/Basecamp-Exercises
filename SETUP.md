@@ -18,8 +18,36 @@ Then open any `.ipynb` in VS Code and **select the `.venv` interpreter as the ke
 (see "Wrong kernel" below). Run the first cell — you should see `✓ Dependencies ready`
 followed by `✓ API key verified`.
 
-> You don't strictly need the venv — the notebooks install what's missing on their own —
-> but a venv is the one setup that sidesteps *every* problem below at once.
+> The venv isn't optional anymore — every notebook now refuses to run on a bare system
+> Python (see "Why the notebook just stopped" below). It's still the one setup that
+> sidesteps *every* problem on this page at once.
+
+---
+
+## Why the notebook just stopped
+
+Every notebook now checks, in its very first code cell, whether it's running inside
+an isolated environment (a `.venv` or a conda env) before anything below it tries to
+install a package. If it isn't, the notebook stops immediately with:
+
+> ⛔ This notebook is running on your SYSTEM Python, not an isolated environment...
+
+**This is expected and intentional** — it replaces the old behavior where the setup
+cell would quietly fall back to installing into whatever Python the kernel happened
+to be (including, in the worst case, `--break-system-packages` against your system
+install). On a personal laptop that's merely messy; on a corporate-managed machine
+it can mean an IT ticket. The guard catches this *before* any install happens instead
+of after.
+
+**Fix:** do the venv setup at the top of this page, then pick that `.venv` interpreter
+in the kernel picker — see "Wrong kernel selected" below. Using conda instead of venv?
+`conda activate <your-env-name>` (not `base`) satisfies the same check.
+
+**Already have everything installed globally, on purpose (facilitator demo box,
+self-managed system Python)?** Set `BASECAMP_ALLOW_SYSTEM_PYTHON=1` in your shell
+before launching VS Code/Jupyter to bypass the check for that session. This is an
+intentional escape hatch for people who know what they're doing — don't hand this
+out as a default fix to a participant who's actually hit the corporate-IT case above.
 
 ---
 
