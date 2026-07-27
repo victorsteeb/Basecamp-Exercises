@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Node.js
+node_modules/
+client/package-lock.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# UV/Python package managers
+uv.lock
+*.lock
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+*.cover
+.hypothesis/
+
+
+# Build outputs
+dist/
+client/dist/
+
+# Logs
+*.log
+logs/
+
+# Playwright MCP artifacts
+.playwright-mcp/
+
+# Environment variables
+.env

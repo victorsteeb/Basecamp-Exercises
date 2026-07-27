@@ -1,0 +1,42 @@
+[
+  {
+    "id": "1",
+    "order_id": "ORD-2025-0927",
+    "item_sku": "FLT-405",
+    "item_name": "Oil Filter Cartridge",
+    "quantity_needed": 1200,
+    "quantity_available": 850,
+    "days_delayed": 3,
+    "priority": "medium"
+  },
+  {
+    "id": "2",
+    "order_id": "ORD-2025-0928",
+    "item_sku": "MTR-304",
+    "item_name": "Electric Motor 5HP",
+    "quantity_needed": 45,
+    "quantity_available": 35,
+    "days_delayed": 2,
+    "priority": "high"
+  },
+  {
+    "id": "3",
+    "order_id": "ORD-2025-0929",
+    "item_sku": "VLV-506",
+    "item_name": "Pressure Relief Valve",
+    "quantity_needed": 180,
+    "quantity_available": 100,
+    "days_delayed": 1,
+    "priority": "high"
+  },
+  {
+    "id": "4",
+    "order_id": "ORD-2025-0930",
+    "item_sku": "WDG-001",
+    "item_name": "Industrial Widget Type A",
+    "quantity_needed": 450,
+    "quantity_available": 275,
+    "days_delayed": 5,
+    "priority": "medium"
+  }
+]

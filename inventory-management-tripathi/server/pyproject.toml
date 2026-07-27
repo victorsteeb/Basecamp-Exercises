@@ -1,0 +1,21 @@
+[project]
+name = "factory-inventory-management"
+version = "1.0.0"
+description = "Factory Inventory Management System Demo"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn>=0.24.0",
+    "pydantic>=2.5.0",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "httpx>=0.27.0",
+    "pytest-cov>=4.1.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]

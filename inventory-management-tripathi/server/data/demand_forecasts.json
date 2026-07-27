@@ -1,0 +1,83 @@
+[
+  {
+    "id": "1",
+    "item_sku": "PCB-003",
+    "item_name": "Multi Layer PCB Assembly",
+    "current_demand": 300,
+    "forecasted_demand": 450,
+    "trend": "increasing",
+    "period": "Next 30 days"
+  },
+  {
+    "id": "2",
+    "item_sku": "STP-304",
+    "item_name": "Stepper Motor NEMA 23",
+    "current_demand": 150,
+    "forecasted_demand": 152,
+    "trend": "stable",
+    "period": "Next 30 days"
+  },
+  {
+    "id": "3",
+    "item_sku": "TMP-201",
+    "item_name": "Temperature Sensor Module",
+    "current_demand": 500,
+    "forecasted_demand": 600,
+    "trend": "increasing",
+    "period": "Next 30 days"
+  },
+  {
+    "id": "4",
+    "item_sku": "SRV-302",
+    "item_name": "Standard Servo Motor",
+    "current_demand": 50,
+    "forecasted_demand": 35,
+    "trend": "decreasing",
+    "period": "Next 30 days"
+  },
+  {
+    "id": "5",
+    "item_sku": "MCU-401",
+    "item_name": "8-bit Microcontroller",
+    "current_demand": 800,
+    "forecasted_demand": 950,
+    "trend": "increasing",
+    "period": "Next 30 days"
+  },
+  {
+    "id": "6",
+    "item_sku": "HMD-202",
+    "item_name": "Humidity Sensor Module",
+    "current_demand": 120,
+    "forecasted_demand": 121,
+    "trend": "stable",
+    "period": "Next 30 days"
+  },
+  {
+    "id": "7",
+    "item_sku": "PSU-501",
+    "item_name": "5V 10A Switching Power Supply",
+    "current_demand": 250,
+    "forecasted_demand": 252,
+    "trend": "stable",
+    "period": "Next 30 days"
+  },
+  {
+    "id": "8",
+    "item_sku": "ACC-206",
+    "item_name": "3-Axis Accelerometer",
+    "current_demand": 180,
+    "forecasted_demand": 182,
+    "trend": "stable",
+    "period": "Next 30 days"
+  },
+  {
+    "id": "9",
+    "item_sku": "MCU-402",
+    "item_name": "32-bit ARM Microcontroller",
+    "current_demand": 95,
+    "forecasted_demand": 96,
+    "trend": "stable",
+    "period": "Next 30 days"
+  }
+]

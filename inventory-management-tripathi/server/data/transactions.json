@@ -1,0 +1,562 @@
+[
+  {
+    "id": "TXN-2025-0901",
+    "date": "2025-09-01",
+    "description": "Steel Bearing Assembly Purchase",
+    "category": "Components",
+    "warehouse": "B",
+    "amount": 13425.00,
+    "vendor": "Industrial Supply Co",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0902",
+    "date": "2025-09-01",
+    "description": "Manufacturing Labor - Week 35",
+    "category": "Labor",
+    "warehouse": "A",
+    "amount": 15800.00,
+    "vendor": "Internal",
+    "type": "Operational"
+  },
+  {
+    "id": "TXN-2025-0903",
+    "date": "2025-09-02",
+    "description": "Oil Filter Cartridge Bulk Order",
+    "category": "Consumables",
+    "warehouse": "A",
+    "amount": 6600.00,
+    "vendor": "FilterMax Inc",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0904",
+    "date": "2025-09-02",
+    "description": "Facility Utilities",
+    "category": "Operational",
+    "warehouse": "A",
+    "amount": 4250.75,
+    "vendor": "PowerGrid Services",
+    "type": "Operational"
+  },
+  {
+    "id": "TXN-2025-0905",
+    "date": "2025-09-03",
+    "description": "High-Temperature Gasket Stock",
+    "category": "Components",
+    "warehouse": "A",
+    "amount": 10837.50,
+    "vendor": "Gasket Solutions Ltd",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0906",
+    "date": "2025-09-03",
+    "description": "Equipment Maintenance",
+    "category": "Operational",
+    "warehouse": "C",
+    "amount": 3850.00,
+    "vendor": "TechMaintain Pro",
+    "type": "Operational"
+  },
+  {
+    "id": "TXN-2025-0907",
+    "date": "2025-09-04",
+    "description": "Industrial Widget Type A Restock",
+    "category": "Widgets",
+    "warehouse": "A",
+    "amount": 7497.00,
+    "vendor": "Widget World Inc",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0908",
+    "date": "2025-09-04",
+    "description": "Warehouse Insurance Premium",
+    "category": "Overhead",
+    "warehouse": "B",
+    "amount": 5200.00,
+    "vendor": "SecureGuard Insurance",
+    "type": "Overhead"
+  },
+  {
+    "id": "TXN-2025-0909",
+    "date": "2025-09-05",
+    "description": "Electric Motor 5HP Purchase",
+    "category": "Equipment",
+    "warehouse": "C",
+    "amount": 8900.00,
+    "vendor": "MotorTech Solutions",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0910",
+    "date": "2025-09-05",
+    "description": "Safety Equipment & Supplies",
+    "category": "Operational",
+    "warehouse": "A",
+    "amount": 2150.50,
+    "vendor": "SafeWork Inc",
+    "type": "Operational"
+  },
+  {
+    "id": "TXN-2025-0911",
+    "date": "2025-09-06",
+    "description": "Pressure Relief Valve Stock",
+    "category": "Components",
+    "warehouse": "B",
+    "amount": 7800.00,
+    "vendor": "Valve Systems Corp",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0912",
+    "date": "2025-09-06",
+    "description": "IT Infrastructure Support",
+    "category": "Overhead",
+    "warehouse": "A",
+    "amount": 3500.00,
+    "vendor": "TechSupport Plus",
+    "type": "Overhead"
+  },
+  {
+    "id": "TXN-2025-0913",
+    "date": "2025-09-07",
+    "description": "Gasket Variety Pack",
+    "category": "Components",
+    "warehouse": "B",
+    "amount": 5100.00,
+    "vendor": "Gasket Solutions Ltd",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0914",
+    "date": "2025-09-08",
+    "description": "Manufacturing Labor - Week 36",
+    "category": "Labor",
+    "warehouse": "B",
+    "amount": 16200.00,
+    "vendor": "Internal",
+    "type": "Operational"
+  },
+  {
+    "id": "TXN-2025-0915",
+    "date": "2025-09-08",
+    "description": "Forklift Maintenance Service",
+    "category": "Operational",
+    "warehouse": "B",
+    "amount": 1850.00,
+    "vendor": "Industrial Equipment Services",
+    "type": "Operational"
+  },
+  {
+    "id": "TXN-2025-0916",
+    "date": "2025-09-09",
+    "description": "Steel Bearing Bulk Order",
+    "category": "Components",
+    "warehouse": "B",
+    "amount": 8950.00,
+    "vendor": "Industrial Supply Co",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0917",
+    "date": "2025-09-09",
+    "description": "Shipping & Logistics",
+    "category": "Operational",
+    "warehouse": "A",
+    "amount": 4780.25,
+    "vendor": "FastShip Logistics",
+    "type": "Operational"
+  },
+  {
+    "id": "TXN-2025-0918",
+    "date": "2025-09-10",
+    "description": "Filter Cartridges Assortment",
+    "category": "Consumables",
+    "warehouse": "A",
+    "amount": 12375.00,
+    "vendor": "FilterMax Inc",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0919",
+    "date": "2025-09-10",
+    "description": "Building Maintenance",
+    "category": "Operational",
+    "warehouse": "C",
+    "amount": 2950.00,
+    "vendor": "Facility Care Services",
+    "type": "Operational"
+  },
+  {
+    "id": "TXN-2025-0920",
+    "date": "2025-09-11",
+    "description": "Electric Motors Various HP",
+    "category": "Equipment",
+    "warehouse": "C",
+    "amount": 11125.00,
+    "vendor": "MotorTech Solutions",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0921",
+    "date": "2025-09-11",
+    "description": "Warehouse Security Services",
+    "category": "Overhead",
+    "warehouse": "B",
+    "amount": 4100.00,
+    "vendor": "SecureWatch Inc",
+    "type": "Overhead"
+  },
+  {
+    "id": "TXN-2025-0922",
+    "date": "2025-09-12",
+    "description": "Valve Assembly Purchase",
+    "category": "Components",
+    "warehouse": "B",
+    "amount": 9360.00,
+    "vendor": "Valve Systems Corp",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0923",
+    "date": "2025-09-12",
+    "description": "Packaging Materials",
+    "category": "Consumables",
+    "warehouse": "A",
+    "amount": 3250.00,
+    "vendor": "PackPro Supplies",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0924",
+    "date": "2025-09-13",
+    "description": "Widget Type A & B Stock",
+    "category": "Widgets",
+    "warehouse": "A",
+    "amount": 6247.50,
+    "vendor": "Widget World Inc",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0925",
+    "date": "2025-09-13",
+    "description": "Quality Control Services",
+    "category": "Operational",
+    "warehouse": "A",
+    "amount": 5500.00,
+    "vendor": "QC Experts LLC",
+    "type": "Operational"
+  },
+  {
+    "id": "TXN-2025-0926",
+    "date": "2025-09-14",
+    "description": "Gasket Specialty Order",
+    "category": "Components",
+    "warehouse": "A",
+    "amount": 8925.00,
+    "vendor": "Gasket Solutions Ltd",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0927",
+    "date": "2025-09-15",
+    "description": "Manufacturing Labor - Week 37",
+    "category": "Labor",
+    "warehouse": "C",
+    "amount": 15900.00,
+    "vendor": "Internal",
+    "type": "Operational"
+  },
+  {
+    "id": "TXN-2025-0928",
+    "date": "2025-09-15",
+    "description": "HVAC System Maintenance",
+    "category": "Operational",
+    "warehouse": "B",
+    "amount": 3200.00,
+    "vendor": "Climate Control Pro",
+    "type": "Operational"
+  },
+  {
+    "id": "TXN-2025-0929",
+    "date": "2025-09-16",
+    "description": "Bearing Assembly Large Order",
+    "category": "Components",
+    "warehouse": "B",
+    "amount": 10740.00,
+    "vendor": "Industrial Supply Co",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0930",
+    "date": "2025-09-16",
+    "description": "Property Tax Payment",
+    "category": "Overhead",
+    "warehouse": "A",
+    "amount": 8500.00,
+    "vendor": "County Tax Authority",
+    "type": "Overhead"
+  },
+  {
+    "id": "TXN-2025-0931",
+    "date": "2025-09-17",
+    "description": "Filter Cartridge Restock",
+    "category": "Consumables",
+    "warehouse": "A",
+    "amount": 7425.00,
+    "vendor": "FilterMax Inc",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0932",
+    "date": "2025-09-17",
+    "description": "Waste Management Services",
+    "category": "Operational",
+    "warehouse": "C",
+    "amount": 1850.00,
+    "vendor": "EcoWaste Solutions",
+    "type": "Operational"
+  },
+  {
+    "id": "TXN-2025-0933",
+    "date": "2025-09-18",
+    "description": "Electric Motor Special Order",
+    "category": "Equipment",
+    "warehouse": "C",
+    "amount": 13350.00,
+    "vendor": "MotorTech Solutions",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0934",
+    "date": "2025-09-18",
+    "description": "Training & Development",
+    "category": "Labor",
+    "warehouse": "A",
+    "amount": 4200.00,
+    "vendor": "SkillUp Training Corp",
+    "type": "Operational"
+  },
+  {
+    "id": "TXN-2025-0935",
+    "date": "2025-09-19",
+    "description": "Valve Components Bulk",
+    "category": "Components",
+    "warehouse": "B",
+    "amount": 14040.00,
+    "vendor": "Valve Systems Corp",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0936",
+    "date": "2025-09-19",
+    "description": "Telecommunications Services",
+    "category": "Overhead",
+    "warehouse": "B",
+    "amount": 2100.00,
+    "vendor": "TechComm Services",
+    "type": "Overhead"
+  },
+  {
+    "id": "TXN-2025-0937",
+    "date": "2025-09-20",
+    "description": "Industrial Widget Premium Line",
+    "category": "Widgets",
+    "warehouse": "A",
+    "amount": 5497.80,
+    "vendor": "Widget World Inc",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0938",
+    "date": "2025-09-20",
+    "description": "Equipment Calibration Service",
+    "category": "Operational",
+    "warehouse": "C",
+    "amount": 3750.00,
+    "vendor": "Precision Calibration Inc",
+    "type": "Operational"
+  },
+  {
+    "id": "TXN-2025-0939",
+    "date": "2025-09-21",
+    "description": "Gasket High-Temp Series",
+    "category": "Components",
+    "warehouse": "B",
+    "amount": 7012.50,
+    "vendor": "Gasket Solutions Ltd",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0940",
+    "date": "2025-09-22",
+    "description": "Manufacturing Labor - Week 38",
+    "category": "Labor",
+    "warehouse": "A",
+    "amount": 16500.00,
+    "vendor": "Internal",
+    "type": "Operational"
+  },
+  {
+    "id": "TXN-2025-0941",
+    "date": "2025-09-22",
+    "description": "Fire Safety Inspection",
+    "category": "Operational",
+    "warehouse": "A",
+    "amount": 1250.00,
+    "vendor": "SafeWork Inc",
+    "type": "Operational"
+  },
+  {
+    "id": "TXN-2025-0942",
+    "date": "2025-09-23",
+    "description": "Bearing Assembly Premium",
+    "category": "Components",
+    "warehouse": "B",
+    "amount": 12530.00,
+    "vendor": "Industrial Supply Co",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0943",
+    "date": "2025-09-23",
+    "description": "Accounting & Payroll Services",
+    "category": "Overhead",
+    "warehouse": "A",
+    "amount": 6200.00,
+    "vendor": "FinancePro Services",
+    "type": "Overhead"
+  },
+  {
+    "id": "TXN-2025-0944",
+    "date": "2025-09-24",
+    "description": "Oil Filter Mega Pack",
+    "category": "Consumables",
+    "warehouse": "A",
+    "amount": 9900.00,
+    "vendor": "FilterMax Inc",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0945",
+    "date": "2025-09-24",
+    "description": "Loading Dock Repairs",
+    "category": "Operational",
+    "warehouse": "B",
+    "amount": 4500.00,
+    "vendor": "Facility Care Services",
+    "type": "Operational"
+  },
+  {
+    "id": "TXN-2025-0946",
+    "date": "2025-09-25",
+    "description": "Electric Motor Emergency Stock",
+    "category": "Equipment",
+    "warehouse": "C",
+    "amount": 15575.00,
+    "vendor": "MotorTech Solutions",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0947",
+    "date": "2025-09-25",
+    "description": "Legal & Compliance Services",
+    "category": "Overhead",
+    "warehouse": "A",
+    "amount": 5800.00,
+    "vendor": "LegalEase LLC",
+    "type": "Overhead"
+  },
+  {
+    "id": "TXN-2025-0948",
+    "date": "2025-09-26",
+    "description": "Valve System Complete Kit",
+    "category": "Components",
+    "warehouse": "B",
+    "amount": 15600.00,
+    "vendor": "Valve Systems Corp",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0949",
+    "date": "2025-09-26",
+    "description": "Facility Utilities",
+    "category": "Operational",
+    "warehouse": "B",
+    "amount": 4850.50,
+    "vendor": "PowerGrid Services",
+    "type": "Operational"
+  },
+  {
+    "id": "TXN-2025-0950",
+    "date": "2025-09-27",
+    "description": "Widget Assortment Large",
+    "category": "Widgets",
+    "warehouse": "A",
+    "amount": 6872.25,
+    "vendor": "Widget World Inc",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0951",
+    "date": "2025-09-27",
+    "description": "Pest Control Services",
+    "category": "Operational",
+    "warehouse": "C",
+    "amount": 850.00,
+    "vendor": "SafeGuard Pest Control",
+    "type": "Operational"
+  },
+  {
+    "id": "TXN-2025-0952",
+    "date": "2025-09-28",
+    "description": "Spring & Hardware Assortment",
+    "category": "Components",
+    "warehouse": "A",
+    "amount": 4200.00,
+    "vendor": "Industrial Supply Co",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0953",
+    "date": "2025-09-29",
+    "description": "Manufacturing Labor - Week 39",
+    "category": "Labor",
+    "warehouse": "B",
+    "amount": 17100.00,
+    "vendor": "Internal",
+    "type": "Operational"
+  },
+  {
+    "id": "TXN-2025-0954",
+    "date": "2025-09-29",
+    "description": "Inventory Management Software",
+    "category": "Overhead",
+    "warehouse": "A",
+    "amount": 7500.00,
+    "vendor": "TechSolutions Inc",
+    "type": "Overhead"
+  },
+  {
+    "id": "TXN-2025-0955",
+    "date": "2025-09-30",
+    "description": "Consumables Variety Pack",
+    "category": "Consumables",
+    "warehouse": "A",
+    "amount": 8950.00,
+    "vendor": "FilterMax Inc",
+    "type": "Purchase"
+  },
+  {
+    "id": "TXN-2025-0956",
+    "date": "2025-09-30",
+    "description": "End of Month Inventory Audit",
+    "category": "Operational",
+    "warehouse": "A",
+    "amount": 3200.00,
+    "vendor": "AuditPro Services",
+    "type": "Operational"
+  }
+]

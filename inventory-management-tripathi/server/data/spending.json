@@ -1,0 +1,124 @@
+{
+  "spending_summary": {
+    "total_procurement_cost": 7370415.0,
+    "total_operational_cost": 3883507.5,
+    "total_labor_cost": 4959000.0,
+    "total_overhead": 1864522.5,
+    "procurement_change": 12.5,
+    "operational_change": 5.8,
+    "labor_change": 7.3,
+    "overhead_change": 3.2
+  },
+  "monthly_spending": [
+    {
+      "month": "Jan",
+      "procurement": 555000,
+      "operational": 285000,
+      "labor": 420000,
+      "overhead": 145000
+    },
+    {
+      "month": "Feb",
+      "procurement": 480000,
+      "operational": 310000,
+      "labor": 445000,
+      "overhead": 135000
+    },
+    {
+      "month": "Mar",
+      "procurement": 620000,
+      "operational": 340000,
+      "labor": 485000,
+      "overhead": 165000
+    },
+    {
+      "month": "Apr",
+      "procurement": 540000,
+      "operational": 295000,
+      "labor": 455000,
+      "overhead": 148000
+    },
+    {
+      "month": "May",
+      "procurement": 680000,
+      "operational": 365000,
+      "labor": 510000,
+      "overhead": 175000
+    },
+    {
+      "month": "Jun",
+      "procurement": 595000,
+      "operational": 342000,
+      "labor": 483000,
+      "overhead": 160500
+    },
+    {
+      "month": "Jul",
+      "procurement": 710000,
+      "operational": 375000,
+      "labor": 520000,
+      "overhead": 168000
+    },
+    {
+      "month": "Aug",
+      "procurement": 560000,
+      "operational": 320000,
+      "labor": 470000,
+      "overhead": 155000
+    },
+    {
+      "month": "Sep",
+      "procurement": 750000,
+      "operational": 395000,
+      "labor": 545000,
+      "overhead": 182000
+    },
+    {
+      "month": "Oct",
+      "procurement": 625000,
+      "operational": 350000,
+      "labor": 495000,
+      "overhead": 165000
+    },
+    {
+      "month": "Nov",
+      "procurement": 580000,
+      "operational": 330000,
+      "labor": 480000,
+      "overhead": 158000
+    },
+    {
+      "month": "Dec",
+      "procurement": 720000,
+      "operational": 385000,
+      "labor": 530000,
+      "overhead": 180000
+    }
+  ],
+  "category_spending": [
+    {
+      "category": "Raw Materials",
+      "amount": 2562000,
+      "percentage": 42.5,
+      "change": 15.2
+    },
+    {
+      "category": "Components",
+      "amount": 2946000,
+      "percentage": 38.8,
+      "change": 10.5
+    },
+    {
+      "category": "Equipment",
+      "amount": 1442400,
+      "percentage": 19.0,
+      "change": 8.3
+    },
+    {
+      "category": "Consumables",
+      "amount": 1767000,
+      "percentage": 23.3,
+      "change": 12.7
+    }
+  ]
+}
