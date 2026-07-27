@@ -11,6 +11,7 @@
 
 anthropic>=0.69            # every exercise — structured outputs, adaptive thinking, effort, batches
 ipykernel>=6               # notebook kernel
+truststore>=0.9            # verify TLS against the OS store — corporate proxies (Zscaler et al.) break certifi
 
 # Day 1/03 Prompt Rescue · Day 2/02 Inference Optimization · archive/day2-03
 matplotlib>=3.7
