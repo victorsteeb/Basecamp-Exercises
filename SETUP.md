@@ -83,6 +83,35 @@ pip install -r requirements.txt
 If PyPI itself is blocked, ask IT for your internal package mirror and use it:
 `pip install -r requirements.txt --index-url https://<your-mirror>/simple`.
 
+### `CERTIFICATE_VERIFY_FAILED` when the notebook calls the API
+**Why:** your company inspects TLS traffic (Zscaler, Netskope, a corporate firewall), so
+the certificate the notebook actually receives is signed by an internal root CA. IT has
+already installed that root in your operating system's certificate store — but Python's
+HTTP stack ignores the OS store and trusts only the `certifi` bundle shipped with pip,
+which has never heard of it. Every API call fails on the handshake.
+
+**Fix:** usually nothing — the setup cell calls
+[`truststore`](https://pypi.org/project/truststore/) before creating the client, which
+points Python's TLS verification at the OS store where your corporate root already lives.
+You'll see `✓ TLS: verifying against the OS certificate store` and everything just works.
+
+If instead you see `[!!] truststore unavailable`, the shim didn't load, and the error is
+in the parentheses:
+- `ModuleNotFoundError` — the install didn't reach it. Run `pip install truststore` in the
+  same environment as your kernel (see "Wrong kernel selected" above), then re-run the cell.
+- `ImportError` / anything else — you're most likely on Python 3.9 or older; `truststore`
+  needs **3.10+**. See "wrong version" below.
+
+**Please don't** set `verify=False`, `SSL_CERT_FILE=""`, or `PYTHONHTTPSVERIFY=0`. Those
+turn off certificate checking altogether rather than fixing which certificates you trust,
+and on a corporate machine that's a security-policy violation, not a workaround. If
+`truststore` can't be made to work, ask IT to export the internal root CA as a `.pem` and
+point Python at it properly:
+```bash
+export SSL_CERT_FILE=/path/to/corporate-root.pem
+export REQUESTS_CA_BUNDLE=$SSL_CERT_FILE
+```
+
 ### "I don't have Python" / wrong version
 You need **Python 3.10+**. Install from [python.org](https://www.python.org/downloads/)
 or your company's software portal, then re-open VS Code so it's detected. Check with
