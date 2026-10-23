@@ -10,3 +10,6 @@ key.env
 # Local environments / cruft
 .venv/
 .ipynb_checkpoints/
+
+# AI interviewer run outputs (transcripts, scorecards)
+ai-interviewer/runs/
