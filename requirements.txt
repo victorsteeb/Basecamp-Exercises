@@ -1,0 +1,26 @@
+# Partner Basecamp exercises — Python dependencies.
+#
+# Fastest path (avoids the "externally-managed-environment" / PEP 668 error):
+#     python3 -m venv .venv
+#     source .venv/bin/activate          # Windows: .venv\Scripts\activate
+#     pip install -r requirements.txt
+# then select the .venv interpreter as your notebook kernel. Full guide: SETUP.md
+#
+# Floors guarantee the API surface the notebooks use; a fresh install pulls the
+# latest compatible release. Verified June 2026 against anthropic 0.104.x.
+
+anthropic[bedrock]>=0.69   # every exercise. The [bedrock] extra adds boto3 so the same
+                           # notebooks run on an Amazon Bedrock key as well as an
+                           # Anthropic API key — harmless if you only use the latter.
+ipykernel>=6               # notebook kernel
+
+# Day 1/03 Prompt Rescue · Day 2/02 Inference Optimization · archive/day2-03
+matplotlib>=3.7
+tabulate>=0.9
+
+# archive/day2-03 Context Engineering only
+seaborn>=0.12
+pandas>=2.0
+numpy>=1.24
+tqdm>=4.66
+python-Levenshtein>=0.21

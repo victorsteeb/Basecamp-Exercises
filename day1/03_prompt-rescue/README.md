@@ -12,13 +12,17 @@ How to systematically diagnose and fix a broken prompt. You'll study failure cas
 
 ## How to run
 
-Work the exercise in the repo — don't copy code out of a chat window. First time on this machine? From the repo root (the folder that contains `day1` and `day2`), run `python3 basecamp_setup.py` once (Windows: `py basecamp_setup.py`) — it installs everything and saves your key (see [SETUP.md](../../SETUP.md)). Then pick a surface:
+Work the exercise in the repo — don't copy code out of a chat window. Pick a surface below — the setup cell asks for your API key (hidden input) and verifies the connection, so no terminal needed. Optionally, set the key once so you're never prompted:
+
+```bash
+export ANTHROPIC_API_KEY=your_key_here   # your shell, the VS Code terminal, or a local .env
+```
 
 ### VS Code / Cursor (recommended)
 
-1. **File → Open Folder** and select the repo root — the folder that contains `day1` and `day2` (after unzipping, check it isn't nested one level down) — then open this exercise's folder in the Explorer.
+1. **File → Open Folder** and select this folder.
 2. Install the **Python** and **Jupyter** extensions if prompted.
-3. Open [`Prompt_Rescue_solo.ipynb`](Prompt_Rescue_solo.ipynb) and pick the **Anthropic Basecamp (.venv)** kernel — run cells with **Shift+Enter** or **Run All**.
+3. Open [`Prompt_Rescue_solo.ipynb`](Prompt_Rescue_solo.ipynb) and pick a **Python 3** kernel — run cells with **Shift+Enter** or **Run All**.
 
 ### Claude Code (CLI)
 
@@ -33,4 +37,4 @@ claude                            # work the exercise with Claude Code as your p
 
 Keep it open alongside as your AI pair — ask it to explain a cell, debug an error, or suggest the next change while you edit.
 
-The setup cell reads your key from the repo's `.env` (or your shell), verifies it with a real API call, and shows a green **✓ API key verified** banner when you're connected — never paste a key into a cell.
+The setup cell reads `ANTHROPIC_API_KEY` from your environment (with a hidden-prompt fallback), verifies it with a real API call, and shows a green **✓ API key verified** banner when you're connected — never paste a key into a cell.

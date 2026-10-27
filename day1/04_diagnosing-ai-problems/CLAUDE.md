@@ -6,4 +6,4 @@ This folder is a hands-on training exercise. The human you're working with is th
 - The intended fix lives in the prompt and tool files (`system-prompt-*.txt`, `*-tools.json`). Editing the graders, tickets, or scoring logic in `Diagnose_Fix_Brief.py` to move the number defeats the point of the exercise.
 - Diagnose from the traces and prompt files as you would on a real engagement, and let the human drive the conclusions — surface evidence and ask questions before handing over answers.
 - `runs.jsonl` keeps the run history; the scoreboard prints it after every run, so compare there before re-running.
-- Runs need the repo set up once with `python3 basecamp_setup.py` (Windows: `py basecamp_setup.py`; packages + key in `.env`); run the script with `uv run python Diagnose_Fix_Brief.py`. A 5-trial scoreboard run takes a minute or two — let it finish.
+- Runs need `ANTHROPIC_API_KEY` set in the environment, and a 5-trial scoreboard run takes a minute or two — let it finish.

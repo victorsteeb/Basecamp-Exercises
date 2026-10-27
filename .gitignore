@@ -9,6 +9,4 @@ key.env
 
 # Local environments / cruft
 .venv/
-uv.lock
-.vscode/
 .ipynb_checkpoints/

@@ -44,15 +44,14 @@ The loop: run it, read the rate, go figure out why, change one thing, run it aga
 
 ## How to run
 
-Work the exercise in the repo — open [`Diagnose_Fix_Brief.ipynb`](Diagnose_Fix_Brief.ipynb) in **VS Code / Cursor** (Jupyter extension; open the repo root folder, the one that contains `day1` and `day2`) and run the cells, or drive it from the terminal / **Claude Code**, with **Claude Desktop** open as your AI pair. Don't copy code out of a chat window.
-
-First time on this machine? From the repo root (the folder that contains `day1` and `day2`), run `python3 basecamp_setup.py` once (Windows: `py basecamp_setup.py`) — it installs everything and saves your key (see [SETUP.md](../../SETUP.md)). Then, from this folder:
+Work the exercise in the repo — open [`Diagnose_Fix_Brief.ipynb`](Diagnose_Fix_Brief.ipynb) in **VS Code / Cursor** (Jupyter extension) and run the cells, or drive it from the terminal / **Claude Code**, with **Claude Desktop** open as your AI pair. Don't copy code out of a chat window.
 
 ```bash
-uv run python Diagnose_Fix_Brief.py --trials 5                          # the baseline
-uv run python Diagnose_Fix_Brief.py --trials 5 --model claude-opus-4-8  # is it the model?
-uv run python Diagnose_Fix_Brief.py --ticket T-4471                     # watch one run end to end
-uv run python Diagnose_Fix_Brief.py --holdout --trials 3                # does your fix hold up?
+export ANTHROPIC_API_KEY=your_key_here
+python3 Diagnose_Fix_Brief.py --trials 5                          # the baseline
+python3 Diagnose_Fix_Brief.py --trials 5 --model claude-opus-4-8  # is it the model?
+python3 Diagnose_Fix_Brief.py --ticket T-4471                     # watch one run end to end
+python3 Diagnose_Fix_Brief.py --holdout --trials 3                # does your fix hold up?
 ```
 
 Pointing **Claude Code** at this folder? It reads `CLAUDE.md` and will work the method with you — surfacing evidence and letting you drive the conclusions.
