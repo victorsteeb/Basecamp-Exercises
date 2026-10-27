@@ -12,13 +12,13 @@ How to build evals for AI agents: defining test tasks, writing graders, running 
 
 ## How to run
 
-Work the exercise in the repo — don't copy code out of a chat window. No terminal setup needed: the **Setup — connect to Claude** cell at the top asks for your API key with a hidden prompt and shows a green **"✓ API key verified"** banner once you're connected. (If `ANTHROPIC_API_KEY` is already set in your environment, it's picked up automatically.)
+Work the exercise in the repo — don't copy code out of a chat window. First time on this machine? From the repo root (the folder that contains `day1` and `day2`), run `python3 basecamp_setup.py` once (Windows: `py basecamp_setup.py`) — it installs everything and saves your key (see [SETUP.md](../../SETUP.md)). The **Setup — connect to Claude** cell at the top then shows a green **✓ verified** banner once you're connected. Pick a surface:
 
 ### VS Code / Cursor (recommended)
 
-1. **File → Open Folder** and select this folder.
+1. **File → Open Folder** and select the repo root — the folder that contains `day1` and `day2` (after unzipping, check it isn't nested one level down) — then open this exercise's folder in the Explorer.
 2. Install the **Python** and **Jupyter** extensions if prompted.
-3. Open [`Building_an_Eval.ipynb`](Building_an_Eval.ipynb) and pick a **Python 3** kernel — run cells with **Shift+Enter**, or **Run All** (the chat cell starts an interactive session automatically; type `quit` to move past it, or set `INTERACTIVE_CHAT = False` in that cell first to skip straight to the eval sections).
+3. Open [`Building_an_Eval.ipynb`](Building_an_Eval.ipynb) and pick the **Anthropic Basecamp (.venv)** kernel — run cells with **Shift+Enter**, or **Run All** (the chat cell starts an interactive session automatically; type `quit` to move past it, or set `INTERACTIVE_CHAT = False` in that cell first to skip straight to the eval sections).
 
 ### Claude Code (CLI)
 

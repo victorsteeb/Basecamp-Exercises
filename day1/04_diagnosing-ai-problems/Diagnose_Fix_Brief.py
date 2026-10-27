@@ -14,11 +14,12 @@
 #   - subagent-*-tools.json                each specialist's tools
 #
 # HOW TO RUN
-#   pip install anthropic
-#   export ANTHROPIC_API_KEY=sk-ant-...
-#   python Diagnose_Fix_Brief.py                 # run the eval, see the scoreboard
-#   python Diagnose_Fix_Brief.py --model claude-opus-4-8   # try a bigger model...
-#                                                          # ...watch cost rise, RESOLVED stay NO
+#   python3 basecamp_setup.py                    # once, from the repo root: packages + your key
+#                                                # (Windows: py basecamp_setup.py)
+#   uv run python Diagnose_Fix_Brief.py          # run the eval, see the scoreboard
+#   uv run python Diagnose_Fix_Brief.py --model claude-opus-4-8   # try a bigger model...
+#                                                                 # ...watch cost rise, RESOLVED stay NO
+#   (or from the notebook, which runs it with the Basecamp kernel's Python)
 # =============================================================================
 
 # Prepared for Partner Basecamp participants. Not for reproduction or
@@ -29,107 +30,36 @@ import os
 import re
 import sys
 import json
+import pathlib
 import argparse
 import datetime
 import threading
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 
-# Install dependencies into THIS kernel — safe to re-run; survives locked-down (PEP 668) Pythons.
-import importlib.util, subprocess, sys
-
-def _ensure_packages(requirements):
-    """requirements: list of (import_name, pip_spec). Install only what is missing,
-    into the running interpreter. Tries a normal install, then user-space, then a
-    PEP 668 override (user-space first, system-wide only as a last resort). Every
-    attempt is silent — pip's output is captured, not streamed — so a locked-down
-    Python (Homebrew or Debian, PEP 668) no longer dumps a scary
-    'externally-managed-environment' wall of text when a fallback is what actually
-    succeeds. Only if every strategy fails does it surface the reason, with the
-    venv fix instead of a raw traceback."""
-    missing = [pip for mod, pip in requirements if importlib.util.find_spec(mod) is None]
-    if not missing:
-        return
-    print("Installing " + ", ".join(missing) + " — first run only, please wait…", flush=True)
-    base = [sys.executable, "-m", "pip", "install", "-q"]
-    last = None
-    for extra in ([], ["--user"], ["--user", "--break-system-packages"], ["--break-system-packages"]):
-        last = subprocess.run(base + extra + missing, capture_output=True, text=True)
-        if last.returncode == 0:
-            return
-    pip_said = (last.stderr or last.stdout or "").strip().splitlines() if last else []
-    tail = "\n      ".join(pip_said[-3:]) if pip_said else "(no output from pip)"
-    raise SystemExit(
-        "\n  Couldn't install: " + ", ".join(missing) + "\n"
-        "  This Python is locked down (PEP 668) or offline. Quickest fix is a venv:\n"
-        f"      {sys.executable} -m venv .venv\n"
-        "      source .venv/bin/activate          # Windows: see SETUP.md\n"
-        f"      pip install {' '.join(missing)}\n"
-        "  Then pick the .venv interpreter in VS Code (kernel picker, top-right) and Run All.\n"
-        "  Corporate proxy or PyPI blocked? See SETUP.md in the repo root.\n"
-        f"  (pip said: {tail})\n"
-    )
-
-_ensure_packages([("anthropic", "anthropic")])
-print("✓ Dependencies ready")
-
-from anthropic import Anthropic
-
 # Replace characters the console can't encode (e.g. on Windows pipes) instead of crashing.
 for _stream in (sys.stdout, sys.stderr):
     if hasattr(_stream, "reconfigure"):
         _stream.reconfigure(errors="replace")
 
-# Load a .env (next to this script or any parent — e.g. a single repo-root .env) so
-# `python Diagnose_Fix_Brief.py` picks up credentials without an explicit export.
-# Works with either an Anthropic API key or an Amazon Bedrock key — same as the notebook.
-import pathlib as _pl
-for _d in [_pl.Path.cwd().resolve(), *_pl.Path.cwd().resolve().parents]:
-    _envf = _d / ".env"
-    if _envf.is_file():
-        for _line in _envf.read_text().splitlines():
-            _line = _line.strip()
-            if _line.startswith("#") or "=" not in _line:
-                continue
-            _k, _v = _line.split("=", 1)
-            _k, _v = _k.strip(), _v.strip().strip('"').strip("'")
-            if _k == "ANTHROPIC_API_KEY" and not _v.startswith("sk-ant-"):
-                continue  # skip the placeholder
-            if _k in ("ANTHROPIC_API_KEY", "AWS_BEARER_TOKEN_BEDROCK", "AWS_REGION"):
-                os.environ.setdefault(_k, _v)
-        break
+# Credentials and routing come from basecamp_setup.py at the repo root — the same logic the
+# notebooks use: an Anthropic API key, an Amazon Bedrock key, or either through a company
+# gateway, read fresh from your shell and the repo's .env (the shell wins).
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
+from basecamp_setup import ROOT, SETUP_COMMAND, Settings
 
-# ── Provider resolution — Anthropic API or Amazon Bedrock ──
-# Bedrock model IDs carry an `anthropic.` prefix; the Anthropic API uses the bare ID.
-PROVIDER = "anthropic" if os.environ.get("ANTHROPIC_API_KEY", "").startswith("sk-ant-") else (
-    "bedrock" if os.environ.get("AWS_BEARER_TOKEN_BEDROCK", "").strip() else None
-)
-
-
-def _model(name):
-    # Idempotent, so a value that arrived from --model can be resolved without
-    # risking a doubled `anthropic.anthropic.` prefix.
-    if PROVIDER != "bedrock":
-        return name
-    return name if name.startswith("anthropic.") else f"anthropic.{name}"
-
-
-def _make_client(timeout=60.0, max_retries=2):
-    if PROVIDER == "bedrock":
-        from anthropic import AnthropicBedrockMantle
-        region = os.environ.get("AWS_REGION", "").strip()
-        if not region:
-            raise SystemExit(
-                "❌ Found AWS_BEARER_TOKEN_BEDROCK but no AWS_REGION.\n"
-                "   Set AWS_REGION to the region your Bedrock models are enabled in "
-                "(e.g. us-east-1) and re-run."
-            )
-        return AnthropicBedrockMantle(aws_region=region, timeout=timeout,
-                                      max_retries=max_retries)
-    return Anthropic(timeout=timeout, max_retries=max_retries)
-
-
-client = _make_client()
+try:
+    _settings = Settings()
+    client = _settings.make_client(timeout=60.0) if _settings.provider else None
+except ImportError as exc:
+    raise SystemExit(
+        f"❌ '{exc.name}' isn't installed for {sys.executable}.\n"
+        f"   From the repo root ({ROOT}), run:  {SETUP_COMMAND}\n"
+        "   then run this with:  uv run python Diagnose_Fix_Brief.py  (or from the notebook)."
+    )
+PROVIDER = _settings.provider
+_base_url = _settings.base_url
+_model = _settings.model  # idempotent, so a value from --model can't end up double-prefixed
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -644,10 +574,11 @@ def execute_coordinator_tool(name, inputs, state, model, trial_num=None):
 _unpriced_models_warned = set()
 
 def cost_of(usage, model):
-    # Bedrock IDs are the same model with an `anthropic.` prefix — price them the same.
+    # Bedrock / gateway IDs are the same model with a prefix — price them the same.
     # NOTE: these are Anthropic API list rates. Your actual Bedrock bill may differ;
     # treat COST here as a relative signal for comparing configurations, not an invoice.
-    model = model[len("anthropic."):] if model.startswith("anthropic.") else model
+    prefix = _model("")
+    model = model[len(prefix):] if prefix and model.startswith(prefix) else model
     if model not in PRICING and model not in _unpriced_models_warned:
         _unpriced_models_warned.add(model)
         print(f"\n  [pricing] '{model}' is not in PRICING, so COST is computed at "
@@ -977,24 +908,26 @@ if __name__ == "__main__":
     args.model = _model(args.model)
 
     # Connection check — fail fast with a clear message instead of a confusing mid-run error.
-    if PROVIDER is None:
-        raise SystemExit(
-            "❌ No credentials found. Set one of:\n"
-            "     export ANTHROPIC_API_KEY=sk-ant-...                 # Anthropic API\n"
-            "     export AWS_BEARER_TOKEN_BEDROCK=...  AWS_REGION=... # Amazon Bedrock\n"
-            "   (or put either in a .env file at the repo root), then re-run."
-        )
+    _issue = _settings.problem()
+    if _issue:
+        _head, _body = _issue
+        raise SystemExit(f"❌ {_head}\n   " + _body.replace("\n", "\n   "))
     _probe_model = _model("claude-haiku-4-5")
     try:
         client.messages.create(model=_probe_model, max_tokens=5,
                                messages=[{"role": "user", "content": "Reply with: ready"}])
     except Exception as e:
-        _hint = ("   Fix the key (missing, invalid, or rate-limited) and re-run."
+        _hint = (f"   Check the key, that you can reach {_base_url} (VPN?), and that\n"
+                 f"   ANTHROPIC_MODEL_PREFIX matches the model IDs your gateway expects."
+                 if _base_url else
+                 "   Fix the key (missing, invalid, or rate-limited) and re-run."
                  if PROVIDER == "anthropic" else
                  f"   Check AWS_BEARER_TOKEN_BEDROCK, and that '{_probe_model}' is enabled for\n"
-                 f"   your account in {os.environ.get('AWS_REGION', '?')}, then re-run.")
+                 f"   your account in {_settings.region or '?'}, then re-run.")
         raise SystemExit(f"❌ Credential check failed — {type(e).__name__}: {e}\n{_hint}")
-    _via = "Anthropic API" if PROVIDER == "anthropic" else f"Bedrock ({os.environ.get('AWS_REGION')})"
+    _via = "Anthropic API" if PROVIDER == "anthropic" else f"Bedrock ({_settings.region or 'gateway'})"
+    if _base_url:
+        _via += f" through {_base_url}"
     print(f"✅ Connected via {_via} — credential verified with {_probe_model}. "
           f"This run uses {args.model}. Any error after this is not the credential.\n")
 

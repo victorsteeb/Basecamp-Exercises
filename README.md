@@ -4,6 +4,20 @@
 
 This repository contains all notebooks and supporting files for Partner Basecamp sessions. Materials are organized by day and session in the order they run.
 
+> [!IMPORTANT]
+> **Setup is one command.** In a terminal at the repo root (the folder that contains `day1` and `day2`), run:
+>
+> ```bash
+> python3 basecamp_setup.py        # macOS / Linux
+> py basecamp_setup.py             # Windows (or: python basecamp_setup.py)
+> ```
+>
+> Follow the prompts: it installs everything, asks for your key, and checks your connection. There's nothing else to install by hand.
+>
+> **Using an AI coding assistant?** Ask it to "set up this repo". [AGENTS.md](AGENTS.md) tells it to open this script in a terminal window, where you paste your key yourself.
+
+**AI agents:** your instructions for this repo are in [AGENTS.md](AGENTS.md) (Claude Code loads them through [CLAUDE.md](CLAUDE.md)). Read it before setting up or running anything.
+
 ---
 
 ## How to download
@@ -12,6 +26,9 @@ This repository contains all notebooks and supporting files for Partner Basecamp
 1. Click the green **Code** button at the top right of this page.
 2. Select **Download ZIP**.
 3. Unzip the file on your computer — you'll get a `Basecamp-Exercises-main` folder with everything inside.
+   Some unzip tools nest it one level deeper (`Basecamp-Exercises-main/Basecamp-Exercises-main/`).
+   The folder you want is the one that **directly contains `day1`, `day2` and `basecamp_setup.py`**:
+   that's the *repo root* the rest of these instructions refer to.
 
 ### Option B — Clone with Git
 ```bash
@@ -65,13 +82,7 @@ Each folder has its own README with the exercise description and step-by-step ru
 ---
 
 ## API key
-You'll need an Anthropic API key for all build-along sessions — and you don't need a terminal to set it. Run the notebook's setup cell once: it creates a gitignored **`.env`** file. Open it, paste your key after `ANTHROPIC_API_KEY=`, save, and re-run — a green **"✓ API key verified"** banner confirms you're connected. The key lives in `.env`, never in a notebook cell (notebooks have a way of ending up in client repos), it survives kernel restarts, and a single `.env` at the repo root serves every exercise.
-
-Prefer to set it once for everything? That works too:
-
-```bash
-export ANTHROPIC_API_KEY=your_key_here   # your shell, the VS Code terminal, or a local .env
-```
+You'll need a key for all build-along sessions: an Anthropic API key, an Amazon Bedrock API key, or a key for your company's gateway. The setup script (below) asks for it and saves it to a gitignored **`.env`** at the repo root. Each notebook's setup cell reads it from there and shows a green **✓ verified** banner when you're connected. The key lives in `.env`, never in a notebook cell (notebooks have a way of ending up in client repos), and one `.env` serves every exercise.
 
 ---
 
@@ -88,12 +99,14 @@ Each session's README has the exact steps.
 
 ## Setup & troubleshooting
 
-The notebooks install what they need on first run and survive locked-down corporate Pythons
-(the `externally-managed-environment` / PEP 668 error, no-admin machines, proxies). If you hit
-a wall, **[SETUP.md](SETUP.md)** is the one-page fix — it covers the venv path, the VS Code
-"wrong kernel" trap, and corporate-proxy installs. For a pinned environment up front:
+1. **Open the repo root in VS Code:** **File → Open Folder** and choose the folder that directly contains `day1`, `day2` and `basecamp_setup.py` (see "How to download" if your unzip made a nested folder). Not a parent folder, not an exercise folder.
+2. **Run the setup once:** open **Terminal → New Terminal** (it starts in the repo root) and run:
 
 ```bash
-python3 -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+python3 basecamp_setup.py        # macOS / Linux
+py basecamp_setup.py             # Windows — or: python basecamp_setup.py if py isn't found
 ```
+
+It installs [uv](https://docs.astral.sh/uv/) if needed, creates `.venv` with everything the exercises use, registers the **Anthropic Basecamp (.venv)** kernel, asks for your key, and checks the connection. Your system Python is never touched, and no admin rights are needed. If you hit a wall, **[SETUP.md](SETUP.md)** is the one-page fix — it covers the VS Code "wrong kernel" trap, corporate proxies, and Bedrock or gateway keys.
+
+Check the [SETUP.md](SETUP.md) file for troubleshooting, Bedrock and gateway keys, and [the manual setup steps](SETUP.md#if-you-want-to-run-the-steps-manually).

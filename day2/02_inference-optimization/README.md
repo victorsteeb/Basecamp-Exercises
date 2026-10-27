@@ -38,18 +38,14 @@ chat; a strong configuration clears 400.
 
 ## How to run
 
-Work the exercise in the repo — don't copy code out of a chat window. Set your key once, then pick a surface:
-
-```bash
-export ANTHROPIC_API_KEY=your_key_here   # your shell, the VS Code terminal, or a local .env
-```
+Work the exercise in the repo — don't copy code out of a chat window. First time on this machine? From the repo root (the folder that contains `day1` and `day2`), run `python3 basecamp_setup.py` once (Windows: `py basecamp_setup.py`) — it installs everything and saves your key (see [SETUP.md](../../SETUP.md)). Then pick a surface:
 
 ### VS Code / Cursor (recommended)
 
-1. **File → Open Folder** and select this folder.
+1. **File → Open Folder** and select the repo root — the folder that contains `day1` and `day2` (after unzipping, check it isn't nested one level down) — then open this exercise's folder in the Explorer.
 2. Install the **Python** and **Jupyter** extensions if prompted.
-3. Open [`Inference_Optimization.ipynb`](Inference_Optimization.ipynb) and pick a **Python 3** kernel — run cells with **Shift+Enter** or **Run All**. The notebook is built to survive **Run All** end to end.
-4. Prefer the terminal? Run it straight through: `python3 Inference_Optimization.py`.
+3. Open [`Inference_Optimization.ipynb`](Inference_Optimization.ipynb) and pick the **Anthropic Basecamp (.venv)** kernel — run cells with **Shift+Enter** or **Run All**. The notebook is built to survive **Run All** end to end.
+4. Prefer the terminal? Run it straight through: `uv run python Inference_Optimization.py`.
 
 ### Claude Code (CLI)
 
@@ -65,7 +61,7 @@ claude                                # …or work the exercise with Claude Code
 
 Keep it open alongside as your AI pair — ask it to explain a cell, debug an error, or suggest the next change while you edit.
 
-The setup cell reads `ANTHROPIC_API_KEY` from your environment (with a hidden-prompt fallback) — never paste a key into a cell.
+The setup cell reads your key from the repo's `.env` (or your shell) and verifies it with a real API call — never paste a key into a cell.
 
 ---
 
