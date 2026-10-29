@@ -44,265 +44,46 @@
 # %% [markdown]
 # # Part 0 · Setup
 #
-# Dependencies first, then your API key. Never paste a key into a cell — you will paste
+# Connect to Claude first. Never paste a key into a cell — you will paste
 # notebooks into client repos one day; build the habit now.
-
-# %%
-# Install dependencies into THIS kernel — safe to re-run; survives locked-down (PEP 668) Pythons.
-import importlib.util, subprocess, sys
-
-def _ensure_packages(requirements):
-    """requirements: list of (import_name, pip_spec). Install only what is missing,
-    into the running interpreter. Tries a normal install, then user-space, then a
-    PEP 668 override (user-space first, system-wide only as a last resort). Every
-    attempt is silent — pip's output is captured, not streamed — so a locked-down
-    Python (Homebrew or Debian, PEP 668) no longer dumps a scary
-    'externally-managed-environment' wall of text when a fallback is what actually
-    succeeds. Only if every strategy fails does it surface the reason, with the
-    venv fix instead of a raw traceback."""
-    missing = [pip for mod, pip in requirements if importlib.util.find_spec(mod) is None]
-    if not missing:
-        return
-    print("Installing " + ", ".join(missing) + " — first run only, please wait…", flush=True)
-    base = [sys.executable, "-m", "pip", "install", "-q"]
-    last = None
-    for extra in ([], ["--user"], ["--user", "--break-system-packages"], ["--break-system-packages"]):
-        last = subprocess.run(base + extra + missing, capture_output=True, text=True)
-        if last.returncode == 0:
-            return
-    pip_said = (last.stderr or last.stdout or "").strip().splitlines() if last else []
-    tail = "\n      ".join(pip_said[-3:]) if pip_said else "(no output from pip)"
-    raise SystemExit(
-        "\n  Couldn't install: " + ", ".join(missing) + "\n"
-        "  This Python is locked down (PEP 668) or offline. Quickest fix is a venv:\n"
-        f"      {sys.executable} -m venv .venv\n"
-        "      source .venv/bin/activate          # Windows: see SETUP.md\n"
-        f"      pip install {' '.join(missing)}\n"
-        "  Then pick the .venv interpreter in VS Code (kernel picker, top-right) and Run All.\n"
-        "  Corporate proxy or PyPI blocked? See SETUP.md in the repo root.\n"
-        f"  (pip said: {tail})\n"
-    )
-
-_ensure_packages([("anthropic", "anthropic"), ("tabulate", "tabulate")])
-print("✓ Dependencies ready")
-
-import os
-import json
-import time
-import statistics
-from dataclasses import dataclass, field
-from typing import List, Optional
-from concurrent.futures import ThreadPoolExecutor
-from tabulate import tabulate
-
-import anthropic
 
 # %% [markdown]
 # ### Setup — connect to Claude
 #
-# Run the next cell first. The setup cell creates a **`.env` file** the first time you run it (gitignored — your key
-# is never committed). Open it, paste your key after `ANTHROPIC_API_KEY=`, save, and re-run —
-# it survives kernel restarts, so you paste once. *(No `.env` yet? A hidden input box appears
-# as a fallback.)* You're locked in when you see the green **"✓ API key verified"** banner. Red banner? Do what it
-# says and run the cell again.
+# Run the next cell. It reads your key from the `.env` file at the repo root and checks it with a real call — you're ready when you see the green **✓ verified** banner. Edited `.env`? Just run the cell again. Red or yellow banner? Do what it says and run the cell again.
+#
+# **First time on this machine?** From the repo root (the folder that contains `day1` and `day2`), run `python3 basecamp_setup.py` once (Windows: `py basecamp_setup.py`; see `SETUP.md`), then pick the **Anthropic Basecamp (.venv)** kernel (top right).
 
 # %%
-import os
-
-def _status(ok, msg):
-    """Green/red banner in notebooks; plain text when run as a script."""
-    try:
-        from IPython import get_ipython
-        shell = get_ipython()
-        if shell is None or shell.__class__.__name__ != "ZMQInteractiveShell":
-            raise RuntimeError("not in a notebook kernel - use the plain-text banner")
-        from IPython.display import display, HTML
-        color = "#1a7f37" if ok else "#b42318"
-        bg = "#e6f4ea" if ok else "#fdecea"
-        icon = "✓" if ok else "✗"
-        display(HTML(
-            f'<div style="padding:12px 16px;border-radius:8px;background:{bg};'
-            f'border:1.5px solid {color};color:{color};font-weight:600;'
-            f'font-size:15px;font-family:sans-serif;">{icon} {msg}</div>'
-        ))
-    except Exception:
-        print(("[OK] " if ok else "[!!] ") + msg)
-
+# ── Setup — connect to Claude ──
+# One-time machine setup is basecamp_setup.py at the repo root: run it once, then pick the
+# "Anthropic Basecamp (.venv)" kernel. This cell reads your key from .env and checks it with a real
+# call. Edited .env? Just run this cell again.
+import json
 import os
 import pathlib
+import statistics
+import sys
+import time
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass, field
+from typing import List, Optional
+
+_root = next((d for d in [pathlib.Path.cwd(), *pathlib.Path.cwd().parents]
+              if (d / "basecamp_setup.py").is_file()), None)
+if _root is None:
+    raise SystemExit("Can't find basecamp_setup.py — open this notebook from inside the "
+                     "Basecamp-Exercises folder (see SETUP.md).")
+if str(_root) not in sys.path:
+    sys.path.insert(0, str(_root))
+from basecamp_setup import connect
+
+claude = connect()
+client = claude.client
+MODEL, FAST_MODEL, BIG_MODEL = claude.model, claude.fast_model, claude.big_model
 
 import anthropic
-
-# ── Connect to Claude — Anthropic API or Amazon Bedrock ──
-# Works with either credential type; the cell figures out which you have.
-#   Anthropic API : ANTHROPIC_API_KEY=sk-ant-...
-#   Amazon Bedrock: AWS_BEARER_TOKEN_BEDROCK=...  plus  AWS_REGION=us-east-1
-# Put whichever you use in the .env file this cell creates (gitignored — never committed),
-# or export it in your shell. A value in the shell wins over the .env file.
-_ENV_TEMPLATE = (
-    "# Anthropic API key — paste after the = (no quotes, no spaces), then save and\n"
-    "# re-run the setup cell. Get one at https://console.anthropic.com/\n"
-    "ANTHROPIC_API_KEY=paste-your-key-here\n"
-    "\n"
-    "# --- Using Amazon Bedrock instead? Comment out the line above and fill these in:\n"
-    "# AWS_BEARER_TOKEN_BEDROCK=paste-your-bedrock-api-key-here\n"
-    "# AWS_REGION=us-east-1\n"
-)
-
-
-def _resolve_env_file():
-    """Nearest existing .env walking up from the working dir (so one root .env serves every
-    exercise); if none exists yet, point at the repo root — or this folder if the notebook
-    was opened on its own."""
-    here = pathlib.Path.cwd().resolve()
-    for d in [here, *here.parents]:
-        if (d / ".env").is_file():
-            return d / ".env"
-    root = next((d for d in [here, *here.parents]
-                 if (d / "SETUP.md").exists() or (d / ".git").exists()), here)
-    return root / ".env"
-
-
-_env_file = _resolve_env_file()
-if not _env_file.exists():
-    _env_file.write_text(_ENV_TEMPLATE)
-    print(f"Created {_env_file.name} in {_env_file.parent} — open it, add your key, "
-          "save, then re-run this cell.")
-
-# Tiny .env parser (no python-dotenv dependency). Re-read on every run, so pasting your
-# key and re-running picks it up. A real value in the environment (shell / Claude Code / CI)
-# wins; the placeholder never sticks.
-_file = {}
-for _line in (_env_file.read_text().splitlines() if _env_file.exists() else []):
-    _line = _line.strip()
-    if _line and not _line.startswith("#") and "=" in _line:
-        _k, _v = _line.split("=", 1)
-        _file[_k.strip()] = _v.strip().strip('"').strip("'")
-for _k, _v in _file.items():
-    if _k != "ANTHROPIC_API_KEY":
-        os.environ.setdefault(_k, _v)
-
-_shell_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-_anthropic_key = _shell_key if _shell_key.startswith("sk-ant-") else _file.get("ANTHROPIC_API_KEY", "").strip()
-_bedrock_token = os.environ.get("AWS_BEARER_TOKEN_BEDROCK", "").strip()
-_bedrock_region = os.environ.get("AWS_REGION", "").strip()
-
-if _anthropic_key.startswith("sk-ant-"):
-    PROVIDER = "anthropic"
-elif _bedrock_token:
-    PROVIDER = "bedrock"
-else:
-    PROVIDER = None
-
-
-def _needs_credentials(head, body):
-    """Warning-yellow banner + stop, so setup fails here rather than several cells later."""
-    _shown = False
-    try:
-        from IPython import get_ipython
-        if get_ipython().__class__.__name__ == "ZMQInteractiveShell":
-            import html as _html
-            from IPython.display import HTML, display
-            display(HTML(
-                '<div style="padding:12px 16px;border-radius:8px;background:#fff8c5;'
-                'border:1.5px solid #9a6700;font-size:15px;font-family:sans-serif;">'
-                '<div style="color:#9a6700;font-weight:600;">' + _html.escape(head) + '</div>'
-                '<pre style="margin:10px 0 0;font-family:inherit;font-size:14px;font-weight:400;'
-                'color:#141413;white-space:pre-wrap;">' + _html.escape(body) + '</pre></div>'
-            ))
-            _shown = True
-    except Exception:
-        pass
-    if not _shown:
-        print("\n" + head + ":\n   " + body.replace("\n", "\n   ") + "\n")
-    raise SystemExit("Credentials missing — see the message above.")
-
-
-if PROVIDER is None:
-    _needs_credentials(
-        "📋 Add your credentials to continue",
-        f"Open this file:  {_env_file}\n"
-        "\n"
-        "Using the Anthropic API? Set:\n"
-        "    ANTHROPIC_API_KEY=sk-ant-...\n"
-        "\n"
-        "Using Amazon Bedrock? Set both:\n"
-        "    AWS_BEARER_TOKEN_BEDROCK=<your Bedrock API key>\n"
-        "    AWS_REGION=us-east-1          # the region your models are enabled in\n"
-        "\n"
-        "Save the file, then click ▶ on this cell again."
-    )
-
-if PROVIDER == "bedrock" and not _bedrock_region:
-    _needs_credentials(
-        "📋 Bedrock needs a region",
-        f"Found AWS_BEARER_TOKEN_BEDROCK but no AWS_REGION.\n"
-        f"\n"
-        f"Open this file:  {_env_file}\n"
-        "and add the region your Bedrock models are enabled in, e.g.:\n"
-        "    AWS_REGION=us-east-1\n"
-        "\n"
-        "Save the file, then click ▶ on this cell again."
-    )
-
-
-def _model(name):
-    """Bedrock model IDs carry an `anthropic.` prefix; the Anthropic API uses the bare ID."""
-    return f"anthropic.{name}" if PROVIDER == "bedrock" else name
-
-
-# Named models the exercise uses — resolved for whichever provider you're on.
-MODEL = _model("claude-sonnet-5")        # the workhorse for this exercise
-FAST_MODEL = _model("claude-haiku-4-5")  # cheap + quick (connection check, judges)
-BIG_MODEL = _model("claude-opus-4-8")    # when you want to try a larger model
-
-
-def _make_client(timeout, max_retries=2):
-    if PROVIDER == "bedrock":
-        from anthropic import AnthropicBedrockMantle
-        return AnthropicBedrockMantle(aws_region=_bedrock_region,
-                                      timeout=timeout, max_retries=max_retries)
-    return anthropic.Anthropic(api_key=_anthropic_key,
-                               timeout=timeout, max_retries=max_retries)
-
-
-# Connection check — verifies the credential AND that this model is reachable for you.
-# On Bedrock a valid key can still 404 if the model isn't enabled in your account/region,
-# so we ping the real model ID rather than just checking the credential's shape.
-_probe = _make_client(timeout=30.0, max_retries=1)
-try:
-    _probe.messages.create(model=FAST_MODEL, max_tokens=1,
-                           messages=[{"role": "user", "content": "ping"}])
-except anthropic.NotFoundError:
-    if PROVIDER == "bedrock":
-        _status(False, f"Bedrock reached, but model '{FAST_MODEL}' isn't available to you in "
-                       f"{_bedrock_region}. Enable model access for it in the Bedrock console "
-                       f"(or switch AWS_REGION to a region where it is enabled), then re-run.")
-    else:
-        _status(False, f"Model '{FAST_MODEL}' not found for this key.")
-    raise SystemExit("Model not available — see the message above.")
-except (anthropic.AuthenticationError, anthropic.PermissionDeniedError):
-    if PROVIDER == "bedrock":
-        _status(False, "That Bedrock key was rejected. Check AWS_BEARER_TOKEN_BEDROCK and that "
-                       "it has Bedrock invoke permissions, then run this cell again.")
-    else:
-        _status(False, "That key was rejected. Run this cell again and paste the whole key "
-                       "(it starts with sk-ant-).")
-    raise SystemExit("Credentials not accepted - re-run this cell and try again.")
-except Exception as exc:
-    _status(False, "Could not reach the API (" + type(exc).__name__ + "). Check your "
-                   "connection, then run this cell again.")
-    raise
-else:
-    if PROVIDER == "anthropic":
-        os.environ["ANTHROPIC_API_KEY"] = _anthropic_key  # later cells / !python pick it up
-        _status(True, "API key verified - you're connected to Claude.")
-    else:
-        _status(True, f"Bedrock key verified ({_bedrock_region}) - you're connected to Claude "
-                      f"as {MODEL}.")
-
-# The working client. Longer timeout: needed for max_tokens>21333 with non-streaming calls.
-client = _make_client(timeout=900.0)
+from tabulate import tabulate
 
 # %%
 # The lab client was created by the setup block above with a long timeout — the short
@@ -1158,12 +939,14 @@ print(f"\nInteractive lane:  ${interactive_cpc:.4f}/contract")
 print(f"Batch lane (50%):  ${interactive_cpc * BATCH_DISCOUNT:.4f}/contract")
 
 RUN_BATCH = False  # flip to True to actually submit; poll with client.messages.batches.retrieve()
-if RUN_BATCH and PROVIDER == "bedrock":
-    # The Batch API is an Anthropic API endpoint — Amazon Bedrock doesn't expose it.
+if RUN_BATCH and not claude.batch_api:
+    # The Batch API is an Anthropic API endpoint — Amazon Bedrock doesn't expose it, and
+    # most company gateways don't pass it through.
     # Everything above still stands: the requests are built, and the 50%-off economics
     # below are the actual teaching point. Bedrock has its own batch-inference product
     # with a different API; the lever (defer non-urgent work, pay less) is the same.
-    print("⚠️  Skipping live submission: the Batch API isn't available on Amazon Bedrock.")
+    print("⚠️  Skipping live submission: the Batch API isn't available on Amazon Bedrock"
+          " or through a gateway.")
     print("    The batch requests above are built and valid — inspect them, and read the")
     print("    cost model below. On Bedrock you'd use its own batch-inference offering.")
 elif RUN_BATCH:
