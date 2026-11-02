@@ -169,7 +169,7 @@ class Unreachable(SystemExit):
     """connect() got no answer from the endpoint: a network problem, not a settings one."""
 
 
-def connect(model="claude-sonnet-5", fast_model="claude-haiku-4-5", big_model="claude-opus-4-8"):
+def connect(model="claude-sonnet-5-5", fast_model="claude-advantage-assist", big_model="claude-opus-4-8"):
     """Build a Claude client from your settings and prove it works, or stop with a clear
     banner saying what to fix. Model names are bare IDs; they come back resolved for your route.
 
