@@ -12,3 +12,4 @@ key.env
 uv.lock
 .vscode/
 .ipynb_checkpoints/
+*.DS_Store
