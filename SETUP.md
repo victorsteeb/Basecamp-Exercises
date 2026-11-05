@@ -133,8 +133,8 @@ Environments). Not in the list? Check VS Code has the repo root open (the folder
 run the setup script, then **Developer: Reload Window** and look again.
 
 ### uv won't install
-A company network can block the official installer. Install uv another way, then run the
-setup script again:
+The script tries the official installer, then winget (Windows), then pip, but a company network
+can block all three. Install uv another way, then run the setup script again:
 - macOS: `brew install uv`
 - Windows: `winget install --id=astral-sh.uv -e`
 - Anything else: [docs.astral.sh/uv/getting-started/installation](https://docs.astral.sh/uv/getting-started/installation/)
