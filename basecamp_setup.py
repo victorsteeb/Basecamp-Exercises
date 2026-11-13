@@ -509,7 +509,7 @@ def main():
     with _step("Installing the exercise packages into .venv (first run takes a minute)"):
         _sync(uv)
     with _step("Registering the Jupyter kernel"):
-        _run([uv, "run", "--no-sync", "python", "-m", "ipykernel", "install", "--user",
+        _run([*uv, "run", "--no-sync", "python", "-m", "ipykernel", "install", "--user",
               "--name", KERNEL_NAME, "--display-name", KERNEL_DISPLAY_NAME], quiet=True)
         print(f"{_check_mark()} Kernel \"{KERNEL_DISPLAY_NAME}\" is available in VS Code and Jupyter.")
         _point_vscode_at_venv()
@@ -517,7 +517,7 @@ def main():
         _retry_while_unreachable(lambda: _check_tls(uv))
     with _step("Checking your connection to Claude"):
         code = _retry_while_unreachable(lambda: subprocess.run(
-            [uv, "run", "--no-sync", "python", "-c",
+            [*uv, "run", "--no-sync", "python", "-c",
              "import sys, basecamp_setup as b\n"
              "try: b.connect()\n"
              "except b.Unreachable: sys.exit(b.EXIT_UNREACHABLE)"], cwd=ROOT).returncode)
@@ -545,7 +545,7 @@ def check_tls_command():
 def _check_tls(uv):
     """check_tls() needs the SDK, so it runs in .venv. Exit code 0 if it found certificates
     that work, EXIT_UNREACHABLE if the endpoint didn't answer, 1 otherwise."""
-    return subprocess.run([uv, "run", "--no-sync", "python", "-c",
+    return subprocess.run([*uv, "run", "--no-sync", "python", "-c",
                            "import sys, basecamp_setup as b; works = b.check_tls(); "
                            "sys.exit(b.EXIT_UNREACHABLE if works is None else not works)"],
                           cwd=ROOT).returncode
@@ -600,15 +600,45 @@ def _run(cmd, quiet=False):
 # ── uv ───────────────────────────────────────────────────────────────────────
 
 def _find_uv():
+    """The command that runs uv, as a list: [uv] or, when pip installed it into a folder that
+    isn't on PATH, [python, "-m", "uv"]. None if uv isn't installed."""
     found = shutil.which("uv")
     if found:
-        return found
-    # Where the official installer puts it, in case this shell's PATH predates the install.
+        return [found]
+    # Where the official installer and winget put it, in case this shell's PATH predates the install.
     exe = "uv.exe" if os.name == "nt" else "uv"
-    for folder in (pathlib.Path.home() / ".local" / "bin", pathlib.Path.home() / ".cargo" / "bin"):
+    folders = [pathlib.Path.home() / ".local" / "bin", pathlib.Path.home() / ".cargo" / "bin"]
+    if os.name == "nt":
+        folders += [pathlib.Path(os.environ[name], *parts)
+                    for name, parts in (("LOCALAPPDATA", ("Microsoft", "WinGet", "Links")),
+                                        ("ProgramFiles", ("WinGet", "Links")))
+                    if os.environ.get(name)]
+    for folder in folders:
         if (folder / exe).is_file():
-            return str(folder / exe)
+            return [str(folder / exe)]
+    # A new process, so it sees a user site-packages folder that pip created after this one started.
+    if subprocess.run([sys.executable, "-m", "uv", "--version"],
+                      capture_output=True).returncode == 0:
+        return [sys.executable, "-m", "uv"]
     return None
+
+
+def _uv_installers():
+    """(name, command) for each way to install uv, in the order to try them."""
+    if os.name == "nt":
+        installers = [("the official installer",
+                       ["powershell", "-ExecutionPolicy", "ByPass", "-c",
+                        "irm https://astral.sh/uv/install.ps1 | iex"])]
+        if shutil.which("winget"):
+            installers.append(("winget", ["winget", "install", "--id=astral-sh.uv", "-e",
+                                          "--source", "winget"]))
+    else:
+        installers = [("the official installer",
+                       ["sh", "-c", "curl -LsSf https://astral.sh/uv/install.sh | sh"])]
+    pip = [sys.executable, "-m", "pip", "install", "uv"]
+    if sys.prefix == sys.base_prefix:
+        pip.append("--user")  # outside a virtual environment: no admin rights needed
+    return installers + [("pip", pip)]
 
 
 def _install_uv():
@@ -618,20 +648,19 @@ def _install_uv():
               "    Any:     see https://docs.astral.sh/uv/getting-started/installation/")
     print("This setup uses uv (https://docs.astral.sh/uv/) to manage Python packages, and it "
           "isn't installed yet.")
-    if not sys.stdin.isatty() or not _ask_yes_no("Install it now with the official installer?",
-                                                 default=True):
+    if not sys.stdin.isatty() or not _ask_yes_no("Install it now?", default=True):
         raise SystemExit(manual)
-    if os.name == "nt":
-        cmd = ["powershell", "-ExecutionPolicy", "ByPass", "-c",
-               "irm https://astral.sh/uv/install.ps1 | iex"]
-    else:
-        cmd = ["sh", "-c", "curl -LsSf https://astral.sh/uv/install.sh | sh"]
-    subprocess.run(cmd)
-    uv = _find_uv()
-    if not uv:
-        raise SystemExit("\nCouldn't install uv automatically (a company network can block it).\n"
-                         + manual)
-    return uv
+    for name, cmd in _uv_installers():
+        print(f"\nInstalling uv with {name}…")
+        try:
+            subprocess.run(cmd)
+        except OSError:  # that installer's own program isn't on this machine
+            pass
+        uv = _find_uv()
+        if uv:
+            return uv
+        print("• That didn't work (a company network can block it).")
+    raise SystemExit("\nCouldn't install uv automatically.\n" + manual)
 
 
 _CERT_FAILURE = re.compile(r"invalid peer certificate|UnknownIssuer|certificate verify failed",
@@ -674,7 +703,7 @@ def _sync(uv):
 
 def _uv_sync(uv, env):
     """Run uv sync, showing its output as it comes; returns (succeeded, output)."""
-    process = subprocess.Popen([uv, "sync"], cwd=ROOT, env=env, stdout=subprocess.PIPE,
+    process = subprocess.Popen([*uv, "sync"], cwd=ROOT, env=env, stdout=subprocess.PIPE,
                                stderr=subprocess.STDOUT, text=True, encoding="utf-8",
                                errors="replace")
     lines = []
@@ -718,7 +747,8 @@ def _open_vscode():
     except (KeyboardInterrupt, EOFError):
         print()
         return
-    subprocess.run([code, str(ROOT)])
+    # Skips the "Do you trust the authors?" prompt, for this VS Code session only.
+    subprocess.run([code, "--disable-workspace-trust", str(ROOT)])
 
 
 # ── Credentials → .env ───────────────────────────────────────────────────────
